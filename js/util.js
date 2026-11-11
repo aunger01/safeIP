@@ -291,6 +291,7 @@
     family: '未返回 IPv6',
     https: 'HTTPS 页面不可用',
     notfound: '查无记录',
+    notrace: '无 trace 响应（可能要求登录或人机验证）',
     notld: '该后缀没有公开的 RDAP 服务',
     notcf: '无法读取（可能未使用 Cloudflare）',
     invalid: '格式不正确',

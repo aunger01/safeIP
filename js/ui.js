@@ -52,9 +52,13 @@
   const exitPill = (e) => `<span class="xtag pill ${exitClass(e)}"><i></i>出口 ${e.label}</span>`;
   const ipText = (ip) => `<span class="mono">${esc(core.fmt(ip))}</span>`;
   const copyBtn = (ip) => `<button type="button" class="icon-btn" data-copy="${esc(core.fmt(ip))}" aria-label="复制" title="复制">${icon('copy')}</button>`;
-  /** 圆形国旗图（circle-flags），按 ISO 3166-1 alpha-2 取图；取不到时由兜底监听换成两位代码 */
+  /** 圆形国旗图：常用国家本地自托管（assets/flags/，源自 hatscripts/circle-flags · MIT），冷门码回退 jsdelivr */
   const FLAG_BASE = 'https://cdn.jsdelivr.net/gh/hatscripts/circle-flags/flags/';
-  const flagUrl = (cc) => `${FLAG_BASE}${String(cc).toLowerCase()}.svg`;
+  const LOCAL_FLAGS = new Set(['cn', 'us', 'hk', 'tw', 'mo', 'jp', 'kr', 'sg', 'my', 'th', 'vn', 'ph', 'id', 'in', 'au', 'nz', 'gb', 'de', 'fr', 'nl', 'it', 'es', 'pt', 'ie', 'ch', 'at', 'be', 'se', 'no', 'dk', 'fi', 'pl', 'cz', 'ru', 'ua', 'tr', 'ae', 'sa', 'ca', 'mx', 'br', 'ar', 'za']);
+  const flagUrl = (cc) => {
+    const low = String(cc).toLowerCase();
+    return LOCAL_FLAGS.has(low) ? `assets/flags/${low}.svg` : `${FLAG_BASE}${low}.svg`;
+  };
   const ccBadge = (cc) => {
     if (!cc) return '';
     const code = String(cc).toUpperCase();

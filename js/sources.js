@@ -140,19 +140,21 @@
   ];
 
   // ---------------- 网站视角：Cloudflare trace ----------------
+  // 站点偶发不回 trace（改道登录页 / 人机验证 / 限流），alt 里放备用端点竞速兜底
   [
     ['chatgpt', 'ChatGPT', 'chatgpt.com', true],
     ['openai', 'OpenAI', 'openai.com', true],
     ['claude', 'Claude', 'claude.ai', true],
     ['grok', 'Grok', 'grok.com', true],
-    ['x', 'X (Twitter)', 'x.com', false],
+    ['x', 'X (Twitter)', 'x.com', false, ['https://api.x.com/cdn-cgi/trace', 'https://t.co/cdn-cgi/trace', 'https://mobile.x.com/cdn-cgi/trace']],
     ['notion', 'Notion', 'www.notion.so', false],
     ['npm', 'npm', 'www.npmjs.com', false],
-  ].forEach(([id, name, host, ai]) => {
+  ].forEach(([id, name, host, ai, alts]) => {
     list.push({
       id, name, host, ai, group: 'site', method: 'text',
       url: `https://${host}/cdn-cgi/trace`,
       parse: fromTrace,
+      ...(alts ? { alt: alts } : {}),
     });
   });
 
@@ -190,38 +192,45 @@
   /** 走代理的国内源实测要 6~8 秒，留足余量 */
   const TIMEOUT = 12000;
 
-  async function fetchRaw(source) {
-    if (source.method === 'jsonp') return util.jsonp(source.url, { timeout: TIMEOUT });
+  async function fetchRaw(source, url) {
+    if (source.method === 'jsonp') return util.jsonp(url || source.url, { timeout: TIMEOUT });
     if (source.method === 'scriptvar') {
       // script 标签无法设置 no-store，加时间戳防止拿到缓存的旧 IP
-      const sep = source.url.includes('?') ? '&' : '?';
-      return util.scriptVar(`${source.url}${sep}_=${Date.now()}`, source.varName, { timeout: TIMEOUT });
+      const sep = (url || source.url).includes('?') ? '&' : '?';
+      return util.scriptVar(`${url || source.url}${sep}_=${Date.now()}`, source.varName, { timeout: TIMEOUT });
     }
-    return util.request(source.url, { as: source.method === 'text' ? 'text' : 'json', timeout: TIMEOUT });
+    return util.request(url || source.url, { as: source.method === 'text' ? 'text' : 'json', timeout: TIMEOUT });
   }
 
   /** 执行一个检测源，永不抛错：返回 { id, ok, ip, family, location, isp, cc, extra, ms, error } */
   async function run(source) {
-    try {
-      const res = await fetchRaw(source);
-      let parsed;
+    // 有备用端点（alt）时逐个尝试；全部解析失败时报 notrace，比笼统的"响应异常"更接近真相
+    const targets = [source.url, ...(source.alt || [])];
+    let lastErr = null;
+    for (const url of targets) {
       try {
-        parsed = source.parse(res.data) || {};
+        const res = await fetchRaw(source, url);
+        let parsed;
+        try {
+          parsed = source.parse(res.data) || {};
+        } catch (e) {
+          throw util.makeError('parse');
+        }
+        const ip = typeof parsed.ip === 'string' ? parsed.ip.trim() : '';
+        const family = util.ipFamily(ip);
+        if (!family) throw util.makeError('parse');
+        if (source.group === 'v6' && family !== 'v6') throw util.makeError('family');
+        return {
+          id: source.id, ok: true, ip, family,
+          location: parsed.location || '', isp: parsed.isp || '',
+          cc: String(parsed.cc || '').toUpperCase(), extra: parsed.extra || {}, ms: res.ms,
+        };
       } catch (e) {
-        throw util.makeError('parse');
+        lastErr = e;
       }
-      const ip = typeof parsed.ip === 'string' ? parsed.ip.trim() : '';
-      const family = util.ipFamily(ip);
-      if (!family) throw util.makeError('parse');
-      if (source.group === 'v6' && family !== 'v6') throw util.makeError('family');
-      return {
-        id: source.id, ok: true, ip, family,
-        location: parsed.location || '', isp: parsed.isp || '',
-        cc: String(parsed.cc || '').toUpperCase(), extra: parsed.extra || {}, ms: res.ms,
-      };
-    } catch (e) {
-      return { id: source.id, ok: false, error: typeof e.code === 'string' ? e.code : 'network' };
     }
+    const code = typeof lastErr?.code === 'string' ? lastErr.code : 'network';
+    return { id: source.id, ok: false, error: source.alt && code === 'parse' ? 'notrace' : code };
   }
 
   SafeIP.sources = { GROUPS, list, byId, run };
