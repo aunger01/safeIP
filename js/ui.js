@@ -52,7 +52,23 @@
   const exitPill = (e) => `<span class="xtag pill ${exitClass(e)}"><i></i>出口 ${e.label}</span>`;
   const ipText = (ip) => `<span class="mono">${esc(core.fmt(ip))}</span>`;
   const copyBtn = (ip) => `<button type="button" class="icon-btn" data-copy="${esc(core.fmt(ip))}" aria-label="复制" title="复制">${icon('copy')}</button>`;
-  const ccBadge = (cc) => (cc ? `<span class="cc" title="${esc(util.countryName(cc))}">${esc(cc)}</span>` : '');
+  /** 圆形国旗图（circle-flags），按 ISO 3166-1 alpha-2 取图；取不到时由兜底监听换成两位代码 */
+  const FLAG_BASE = 'https://cdn.jsdelivr.net/gh/hatscripts/circle-flags/flags/';
+  const flagUrl = (cc) => `${FLAG_BASE}${String(cc).toLowerCase()}.svg`;
+  const ccBadge = (cc) => {
+    if (!cc) return '';
+    const code = String(cc).toUpperCase();
+    return `<span class="cc" title="${esc(util.countryName(cc))}"><img class="cc-flag" src="${esc(flagUrl(cc))}" alt="${esc(code)}" width="18" height="18" loading="lazy" decoding="async"></span>`;
+  };
+  // CSP 里没有 script-src 'unsafe-inline'，内联 onerror 会被拦下，故用捕获阶段的委托兜底
+  document.addEventListener('error', (e) => {
+    const img = e.target;
+    if (!img || img.tagName !== 'IMG' || !img.classList.contains('cc-flag')) return;
+    const code = document.createElement('span');
+    code.className = 'cc-code';
+    code.textContent = img.getAttribute('alt') || '';
+    img.replaceWith(code);
+  }, true);
   const avatar = (name) => `<span class="avatar" aria-hidden="true">${esc(Array.from(String(name || '?'))[0].toUpperCase())}</span>`;
   const iconAvatar = (name) => `<span class="avatar" aria-hidden="true">${icon(name)}</span>`;
   const fmtMs = (ms) => (ms == null ? '—' : ms >= 1000 ? `${(ms / 1000).toFixed(1)} s` : `${Math.round(ms)} ms`);
