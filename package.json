@@ -6,6 +6,8 @@
   "license": "MIT",
   "scripts": {
     "test": "node --test \"tests/*.test.js\"",
-    "start": "python -m http.server 8000"
+    "start": "python -m http.server 8000",
+    "bump": "node scripts/bump-version.cjs",
+    "bump:check": "node scripts/bump-version.cjs --check"
   }
 }

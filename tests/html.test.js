@@ -8,6 +8,7 @@ const ROOT = path.join(__dirname, '..');
 const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8').replace(/<!--[\s\S]*?-->/g, '');
 const tags = html.match(/<script\b[^>]*\ssrc=[^>]*>/g) || []; // 外部脚本（不含 JSON-LD 数据块）
 const srcs = tags.map((t) => /\ssrc="([^"]+)"/.exec(t)[1]);
+const srcPath = (s) => s.replace(/\?v=.*$/, ''); // 去掉破缓存查询串再对文件系统
 const attr = (re) => (re.exec(html) || [])[1];
 
 test('脚本全部 defer 并放在 head（CSP meta 会让预加载失效，普通脚本会串行下载）', () => {
@@ -20,11 +21,23 @@ test('脚本全部 defer 并放在 head（CSP meta 会让预加载失效，普�
 });
 
 test('脚本引用完整：文件都存在，js/ 下每个文件都被引用，util.js 最先、app.js 最后', () => {
-  for (const src of srcs) assert.ok(fs.existsSync(path.join(ROOT, src)), src);
+  for (const src of srcs) assert.ok(fs.existsSync(path.join(ROOT, srcPath(src))), src);
   const list = (dir) => fs.readdirSync(path.join(ROOT, dir)).filter((f) => f.endsWith('.js')).map((f) => `${dir}/${f}`);
-  assert.deepEqual([...srcs].sort(), [...list('js'), ...list('js/pages')].sort());
-  assert.equal(srcs[0], 'js/util.js');
-  assert.equal(srcs[srcs.length - 1], 'js/app.js');
+  assert.deepEqual([...srcs].map(srcPath).sort(), [...list('js'), ...list('js/pages')].sort());
+  assert.equal(srcPath(srcs[0]), 'js/util.js');
+  assert.equal(srcPath(srcs[srcs.length - 1]), 'js/app.js');
+});
+
+test('静态资源带统一版本戳（否则 CDN/浏览器缓存旧 JS，新功能不生效）', () => {
+  const refs = [...html.matchAll(/\s(?:src|href)="((?:js\/[\w./-]+\.js|css\/style\.css|assets\/manifest\.webmanifest))(\?v=([^"]*))?"/g)];
+  assert.ok(refs.length > 10, `引用数异常: ${refs.length}`);
+  const versions = new Set();
+  for (const [, file, query, ver] of refs) {
+    assert.ok(query, `${file} 缺少 ?v=，发布后会被旧缓存顶住`);
+    assert.match(ver, /^[A-Za-z0-9._-]{4,40}$/, `${file} 版本号格式异常: ${ver}`);
+    versions.add(ver);
+  }
+  assert.equal(versions.size, 1, `版本号不统一: ${[...versions].join(', ')}`);
 });
 
 test('SEO：标题、描述、canonical、Open Graph 与图标文件齐全', () => {
