@@ -122,6 +122,30 @@ test('geo.merge 按优先级合并字段并记录来源', () => {
   assert.equal(empty.asn, null);
 });
 
+test('geo.merge 国旗跟地名走：中文源说中国就不许挂别国旗', () => {
+  // 境外源误判/失联时，中文地名必须压过境外 cc
+  const cn = geo.merge(CN_IP, {
+    zxinc: { location: '中国 广东 深圳' },
+    ipsb: { cc: 'US', locationEn: 'United States' },
+  });
+  assert.equal(cn.cc, 'CN');
+  assert.equal(cn.location, '中国 广东 深圳');
+
+  // 港台澳按地名细分
+  assert.equal(geo.merge(CN_IP, { zxinc: { location: '中国 香港' } }).cc, 'HK');
+  assert.equal(geo.merge(CN_IP, { zxinc: { location: '中国 台湾 台北' } }).cc, 'TW');
+  assert.equal(geo.merge(CN_IP, { zxinc: { location: '中国 澳门' } }).cc, 'MO');
+
+  // 百度不给国家码，省级地名同样能推出 CN
+  assert.equal(geo.merge(CN_IP, { baidu: { location: '广东省深圳市', isp: '电信' } }).cc, 'CN');
+  assert.equal(geo.merge(CN_IP, { baidu: { location: '北京市', isp: '联通' } }).cc, 'CN');
+
+  // 海外 IP 不受守卫影响
+  const us = geo.merge(INTL_IP, { zxinc: { location: '美国 加利福尼亚州' }, ipsb: { cc: 'US', locationEn: 'United States' } });
+  assert.equal(us.cc, 'US');
+  assert.equal(us.location, '美国 加利福尼亚州');
+});
+
 test('geo.lookup 限制并发、按 IP 缓存、失败时降级', async () => {
   const originalRequest = util.request;
   const originalJsonp = util.jsonp;

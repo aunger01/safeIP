@@ -15,13 +15,31 @@
 
   const enc = encodeURIComponent;
 
+  /** 中文地名 → 国家码。海外源不给 cc、或给错时，用中文源的地名兜底，
+   *  保证「地名说中国、旗子挂美国」这种自相矛盾不出现 */
+  const CN_PROVINCE_RE = /^(中国|北京|上海|天津|重庆|河北|山西|辽宁|吉林|黑龙江|江苏|浙江|安徽|福建|江西|山东|河南|湖北|湖南|广东|海南|四川|贵州|云南|陕西|甘肃|青海|台湾|内蒙古|广西|西藏|宁夏|新疆|香港|澳门)/;
+  function ccFromCnText(text) {
+    const s = String(text || '').trim();
+    if (!s) return '';
+    if (/香港/.test(s)) return 'HK';
+    if (/澳门/.test(s)) return 'MO';
+    if (/台湾/.test(s)) return 'TW';
+    if (CN_PROVINCE_RE.test(s)) return 'CN';
+    return '';
+  }
+
   /** 各提供方：返回统一字段 { cc, location, locationEn, isp, asn, asnName, flags } 的子集 */
   const providers = {
     async zxinc(ip) {
       const { data } = await util.request(`https://ip.zxinc.org/api.php?type=json&ip=${enc(ip)}`);
       const x = (data && data.data) || {};
       if (data.code !== 0 || !x.country) throw util.makeError('parse');
-      return { location: place(...String(x.country).split('–')), isp: util.clean(x.local) };
+      const countryText = String(x.country);
+      return {
+        cc: ccFromCnText(countryText),
+        location: place(...countryText.split('–')),
+        isp: util.clean(x.local),
+      };
     },
     async baidu(ip) {
       const { data } = await util.jsonp(
@@ -30,7 +48,7 @@
       const item = data && data.data && data.data[0];
       if (!item || !item.location) throw util.makeError('parse');
       const [loc, isp] = String(item.location).trim().split(/\s+/);
-      return { location: loc, isp };
+      return { cc: ccFromCnText(loc), location: loc, isp };
     },
     async ipapi(ip) {
       const fields = 'status,message,country,countryCode,regionName,city,isp,org,as,mobile,proxy,hosting,query';
@@ -78,12 +96,13 @@
     zxinc: 'ZXInc', baidu: '百度', ipapi: 'ip-api', ipsb: 'IP.SB', ipwhois: 'ipwho.is', ipinfo: 'ipinfo',
   };
 
-  /** 每个字段按优先级取第一个非空值 */
+  /** 每个字段按优先级取第一个非空值。cc 与 location 同源优先：
+   *  中文源能判定中国（含港台澳）时以它为准，避免「地名中国 + 旗子别国」 */
   const PRIORITY = {
     location: ['zxinc', 'baidu', 'ipapi'],
     locationEn: ['ipsb', 'ipwhois', 'ipinfo'],
     isp: ['zxinc', 'ipapi', 'baidu', 'ipsb', 'ipwhois'],
-    cc: ['ipsb', 'ipapi', 'ipwhois', 'ipinfo'],
+    cc: ['zxinc', 'baidu', 'ipsb', 'ipapi', 'ipwhois', 'ipinfo'],
     asn: ['ipsb', 'ipapi', 'ipwhois', 'ipinfo'],
   };
 
@@ -102,9 +121,13 @@
     const cc = pick(got, 'cc');
     const asn = pick(got, 'asn');
     const flags = got.ipapi && got.ipapi.flags;
+    // 一致性守卫：地名能明确判定为中国（含港台澳）时，旗子必须跟着地名走
+    const ccFromLoc = ccFromCnText(loc ? loc.value : '');
+    let ccValue = cc ? String(cc.value).toUpperCase() : '';
+    if (ccFromLoc) ccValue = ccFromLoc;
     return {
       ip,
-      cc: cc ? String(cc.value).toUpperCase() : '',
+      cc: ccValue,
       location: loc ? loc.value : '',
       isp: isp ? isp.value : '',
       asn: asn ? asn.value : null,

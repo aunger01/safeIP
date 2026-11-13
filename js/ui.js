@@ -52,7 +52,7 @@
   const exitPill = (e) => `<span class="xtag pill ${exitClass(e)}"><i></i>出口 ${e.label}</span>`;
   const ipText = (ip) => `<span class="mono">${esc(core.fmt(ip))}</span>`;
   const copyBtn = (ip) => `<button type="button" class="icon-btn" data-copy="${esc(core.fmt(ip))}" aria-label="复制" title="复制">${icon('copy')}</button>`;
-  /** 圆形国旗图：常用国家本地自托管（assets/flags/，源自 hatscripts/circle-flags · MIT），冷门码回退 jsdelivr */
+  /** 圆形国旗图：常用国家内联 SVG（js/flags.js，源自 hatscripts/circle-flags · MIT），冷门码回退 jsdelivr */
   const FLAG_BASE = 'https://cdn.jsdelivr.net/gh/hatscripts/circle-flags/flags/';
   const LOCAL_FLAGS = new Set(['cn', 'us', 'hk', 'tw', 'mo', 'jp', 'kr', 'sg', 'my', 'th', 'vn', 'ph', 'id', 'in', 'au', 'nz', 'gb', 'de', 'fr', 'nl', 'it', 'es', 'pt', 'ie', 'ch', 'at', 'be', 'se', 'no', 'dk', 'fi', 'pl', 'cz', 'ru', 'ua', 'tr', 'ae', 'sa', 'ca', 'mx', 'br', 'ar', 'za']);
   const flagUrl = (cc) => {
@@ -62,7 +62,11 @@
   const ccBadge = (cc) => {
     if (!cc) return '';
     const code = String(cc).toUpperCase();
-    return `<span class="cc" title="${esc(util.countryName(cc))}"><img class="cc-flag" src="${esc(flagUrl(cc))}" alt="${esc(code)}" width="18" height="18" loading="lazy" decoding="async"></span>`;
+    const title = esc(util.countryName(cc));
+    // 常用国家走内联 SVG：重绘时既不发请求也不用重新解码，避免流式刷新期间国旗反复闪烁
+    const svg = SafeIP.flags && SafeIP.flags.get(cc);
+    if (svg) return `<span class="cc" title="${title}" role="img" aria-label="${esc(code)}">${svg}</span>`;
+    return `<span class="cc" title="${title}"><img class="cc-flag" src="${esc(flagUrl(cc))}" alt="${esc(code)}" width="18" height="18" loading="lazy" decoding="async"></span>`;
   };
   // CSP 里没有 script-src 'unsafe-inline'，内联 onerror 会被拦下，故用捕获阶段的委托兜底
   document.addEventListener('error', (e) => {
