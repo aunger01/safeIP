@@ -95,17 +95,32 @@
       const v = core.view();
       const q = (k) => this.el.querySelector(`[data-r="${k}"]`);
 
-      q('sources').innerHTML = Object.entries(sources.GROUPS).map(([gid, g]) => {
-        const rows = v.rows.filter((x) => x.meta.group === gid);
-        const okN = rows.filter((x) => x.result && x.result.ok).length;
-        const doneN = rows.filter((x) => x.result).length;
-        const body = gid === 'v6' && doneN === rows.length && okN === 0
-          ? '<div class="empty">未检测到 IPv6 出口：你的网络可能没有 IPv6，或者 IPv6 已被禁用。</div>'
-          : `<div class="grid">${rows.map((x) => sourceCard(v, x)).join('')}</div>`;
-        return ui.subhead(g.title, `${okN}/${rows.length} 成功`, g.desc) + body;
-      }).join('');
+      q('sources').innerHTML = (() => {
+        const part = (gid) => {
+          const g = sources.GROUPS[gid];
+          const rows = v.rows.filter((x) => x.meta.group === gid);
+          const okN = rows.filter((x) => x.result && x.result.ok).length;
+          const doneN = rows.filter((x) => x.result).length;
+          const body = gid === 'v6' && doneN === rows.length && okN === 0
+            ? '<div class="empty">未检测到 IPv6 出口：你的网络可能没有 IPv6，或者 IPv6 已被禁用。</div>'
+            : `<div class="grid">${rows.map((x) => sourceCard(v, x)).join('')}</div>`;
+          return ui.subhead(g.title, `${okN}/${rows.length} 成功`, g.desc) + body;
+        };
+        // 国内服务合并成一块：IP 检测源在前，品牌站点探针紧随其后，不再拆成两个分类
+        const dom = splittest.CATEGORIES.find((c) => c.id === 'domestic');
+        const cnRows = v.rows.filter((x) => x.meta.group === 'cn');
+        const cnOk = cnRows.filter((x) => x.result && x.result.ok).length;
+        const domDone = dom.items.filter((id) => this.traces.has(id));
+        const domOk = domDone.filter((id) => this.traces.get(id).ok).length;
+        const stat = `检测源 ${cnOk}/${cnRows.length} · 品牌 ${domDone.length ? `${domOk}/${dom.items.length}` : '测试中'}`;
+        return ui.subhead('国内服务', stat, '国内检测源看到的 IP，以及阿里 / 腾讯 / 网易 / 字节等品牌站点收到的出口（借道其自家接口，非 Cloudflare trace）')
+          + `<div class="grid">${cnRows.map((x) => sourceCard(v, x)).join('')}</div>`
+          + '<div class="sub-label">品牌站点出口</div>'
+          + `<div class="grid compact">${dom.items.map((id) => traceCard(v, splittest.BY_ID.get(id), this.traces.get(id))).join('')}</div>`
+          + part('intl') + part('site') + part('v6');
+      })();
 
-      q('sites').innerHTML = splittest.CATEGORIES.map((c) => {
+      q('sites').innerHTML = splittest.CATEGORIES.filter((c) => c.id !== 'domestic').map((c) => {
         const done = c.items.filter((id) => this.traces.has(id));
         const okN = done.filter((id) => this.traces.get(id).ok).length;
         const block = ui.subhead(c.title, done.length ? `${okN}/${c.items.length} 可读取` : '测试中', c.desc)

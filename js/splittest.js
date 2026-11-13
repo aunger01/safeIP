@@ -26,24 +26,24 @@
 
   /** 探针清单。cf 类带 host；其余带 url/header 或走固定接口 */
   const PROBES = [
-    // —— 国内站点 ——
-    { id: 'alibaba', name: '阿里巴巴', echo: 'ali', hint: '阿里 DNS 探测接口' },
+    // —— 国内品牌（渲染时与检测源「国内服务」组合并为一块）——
     { id: 'tencent', name: '腾讯', echo: 'qq', hint: '腾讯新闻 IP 接口' },
-    {
-      id: 'netease', name: '网易', echo: 'header', hint: '网易易盾 CDN 响应头',
-      url: 'https://necaptcha.nosdn.127.net/ab7f4275c1744aa28e0a8f3a1c58c532.png', header: 'cdn-user-ip',
-    },
+    { id: 'alibaba', name: '阿里巴巴', echo: 'ali', hint: '阿里 DNS 探测接口' },
     {
       id: 'bytedance', name: '字节跳动', echo: 'header', hint: '字节测速 CDN 响应头',
       url: 'https://perfops1.byteperf.com/500b-bench.jpg', header: 'x-request-ip',
     },
+    {
+      id: 'netease', name: '网易', echo: 'header', hint: '网易易盾 CDN 响应头',
+      url: 'https://necaptcha.nosdn.127.net/ab7f4275c1744aa28e0a8f3a1c58c532.png', header: 'cdn-user-ip',
+    },
     { id: 'cf-cn', name: 'Cloudflare 中国网络', echo: 'cf', host: 'perfops.cloudflareperf.com' },
     { id: 'qualcomm-cn', name: '高通中国', echo: 'cf', host: 'www.qualcomm.cn' },
 
-    // —— AI 服务 ——
+    // —— AI 服务（大厂在前，同品牌聚在一起）——
     { id: 'chatgpt', name: 'ChatGPT', echo: 'cf', host: 'chatgpt.com', ai: true },
-    { id: 'sora', name: 'Sora', echo: 'cf', host: 'sora.com', ai: true },
     { id: 'openai', name: 'OpenAI', echo: 'cf', host: 'api.openai.com', ai: true },
+    { id: 'sora', name: 'Sora', echo: 'cf', host: 'sora.com', ai: true },
     { id: 'claude', name: 'Claude', echo: 'cf', host: 'claude.ai', ai: true },
     { id: 'anthropic', name: 'Anthropic', echo: 'cf', host: 'api.anthropic.com', ai: true },
     { id: 'anthropic-web', name: 'Anthropic 官网', echo: 'cf', host: 'www.anthropic.com', ai: true },
@@ -55,24 +55,24 @@
 
     // —— 国际站点 ——
     { id: 'cloudflare', name: 'Cloudflare', echo: 'cf', host: 'www.cloudflare.com' },
+    { id: 'x', name: 'X', echo: 'cf', host: 'x.com' },
     { id: 'discord', name: 'Discord', echo: 'cf', host: 'gateway.discord.gg' },
     { id: 'visa', name: 'Visa', echo: 'cf', host: 'www.visa.com' },
-    { id: 'x', name: 'X', echo: 'cf', host: 'x.com' },
     { id: 'medium', name: 'Medium', echo: 'cf', host: 'medium.com' },
     { id: 'nodejs', name: 'Node.js', echo: 'cf', host: 'nodejs.org' },
     { id: 'crunchyroll', name: 'Crunchyroll', echo: 'cf', host: 'www.crunchyroll.com' },
 
-    // —— 开发者与静态资源 ——
+    // —— 开发者与静态资源（包管理与大平台在前，镜像类在后）——
     { id: 'npm', name: 'npm', echo: 'cf', host: 'www.npmjs.com' },
+    { id: 'docker', name: 'Docker Hub', echo: 'cf', host: 'hub.docker.com' },
+    { id: 'gitlab', name: 'GitLab', echo: 'cf', host: 'gitlab.com' },
+    { id: 'cf-dash', name: 'Cloudflare 控制台', echo: 'cf', host: 'dash.cloudflare.com' },
     { id: 'npm-registry', name: 'npm registry', echo: 'cf', host: 'registry.npmjs.org' },
+    { id: 'jsdelivr', name: 'jsDelivr', echo: 'cf', host: 'testingcf.jsdelivr.net' },
     { id: 'unpkg', name: 'unpkg', echo: 'cf', host: 'unpkg.com' },
     { id: 'cdnjs', name: 'cdnjs', echo: 'cf', host: 'cdnjs.cloudflare.com' },
-    { id: 'jsdelivr', name: 'jsDelivr', echo: 'cf', host: 'testingcf.jsdelivr.net' },
     { id: 'cf-mirrors', name: 'Cloudflare Mirrors', echo: 'cf', host: 'cloudflaremirrors.com' },
     { id: 'kali', name: 'Kali 镜像', echo: 'cf', host: 'kali.download' },
-    { id: 'gitlab', name: 'GitLab', echo: 'cf', host: 'gitlab.com' },
-    { id: 'docker', name: 'Docker Hub', echo: 'cf', host: 'hub.docker.com' },
-    { id: 'cf-dash', name: 'Cloudflare 控制台', echo: 'cf', host: 'dash.cloudflare.com' },
 
     // —— 加密货币 ——
     { id: 'coinbase', name: 'Coinbase', echo: 'cf', host: 'www.coinbase.com' },
@@ -108,15 +108,15 @@
 
   const BY_ID = new Map(PROBES.map((p) => [p.id, p]));
 
-  /** 分类：国内站单列，其余按用途分，避免所有站点挤在四个大筐里 */
+  /** 分类：国内品牌组在渲染层与检测源「国内服务」合并成一块；其余按用途分 */
   const CATEGORIES = [
-    { id: 'domestic', title: '国内站点', desc: '阿里 / 腾讯 / 网易等国内服务看到的 IP（借道其接口，非 trace）', items: ['alibaba', 'tencent', 'netease', 'bytedance', 'cf-cn', 'qualcomm-cn'] },
-    { id: 'ai', title: 'AI 服务', desc: '地区限制最严的一类，出口不对会直接被拒', items: ['chatgpt', 'sora', 'openai', 'claude', 'anthropic', 'anthropic-web', 'grok', 'xai', 'perplexity', 'poe', 'character'] },
-    { id: 'intl', title: '国际站点', desc: '常用海外服务', items: ['cloudflare', 'discord', 'visa', 'x', 'medium', 'nodejs', 'crunchyroll'] },
-    { id: 'dev', title: '开发者与静态资源', desc: '包管理、CDN 与镜像站', items: ['npm', 'npm-registry', 'unpkg', 'cdnjs', 'jsdelivr', 'cf-mirrors', 'kali', 'gitlab', 'docker', 'cf-dash'] },
+    { id: 'domestic', title: '国内品牌站点', desc: '阿里 / 腾讯 / 网易 / 字节等国内品牌站点收到的出口 IP（借道其自家接口，非 Cloudflare trace）', items: ['tencent', 'alibaba', 'bytedance', 'netease', 'cf-cn', 'qualcomm-cn'] },
+    { id: 'ai', title: 'AI 服务', desc: '地区限制最严的一类，出口不对会直接被拒', items: ['chatgpt', 'openai', 'sora', 'claude', 'anthropic', 'anthropic-web', 'grok', 'xai', 'perplexity', 'poe', 'character'] },
+    { id: 'intl', title: '国际站点', desc: '常用海外服务', items: ['cloudflare', 'x', 'discord', 'visa', 'medium', 'nodejs', 'crunchyroll'] },
+    { id: 'dev', title: '开发者与静态资源', desc: '包管理、代码托管与 CDN 镜像', items: ['npm', 'docker', 'gitlab', 'cf-dash', 'npm-registry', 'jsdelivr', 'unpkg', 'cdnjs', 'cf-mirrors', 'kali'] },
     { id: 'crypto', title: '加密货币', desc: '交易所对出口地区敏感', items: ['coinbase', 'okx'] },
-    { id: 'social', title: '社交与内容', desc: '社区、问答与图站', items: ['stackoverflow', 'quora', 'pixiv', 'v2ex', 'linuxdo'] },
-    { id: 'tools', title: '工具与购物', desc: '生产力、学习与电商', items: ['notion', 'canva', 'udemy', 'shopify', 'indeed', 'nav'] },
+    { id: 'social', title: '社交与内容', desc: '社区、问答与图站', items: ['stackoverflow', 'pixiv', 'v2ex', 'linuxdo', 'quora'] },
+    { id: 'tools', title: '工具与购物', desc: '生产力、学习与电商', items: ['notion', 'canva', 'shopify', 'udemy', 'indeed', 'nav'] },
     { id: 'nsfw', title: 'NSFW', desc: '仅做出口一致性对照，点到为止', items: ['ehentai', 'missav-ws', 'missav-ai', 'missav-live', 'hanime1', 'hanimeone', 'hanime1com', 'javchu', 'jkforum', 'javdb'] },
   ];
 

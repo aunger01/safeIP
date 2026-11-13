@@ -197,6 +197,8 @@ small { font-size: 12px; }
   margin-left: auto; font-size: 12px; font-weight: 600; color: var(--ink-2); font-variant-numeric: tabular-nums;
   background: var(--card); border: 1px solid var(--border); padding: 1px 9px; border-radius: 999px;
 }
+/* 组内小节标签：同一分类下的次级分组（如国内服务的「品牌站点出口」） */
+.sub-label { margin: 20px 0 8px; font-size: 12px; font-weight: 600; color: var(--ink-2); letter-spacing: 0.04em; }
 
 .panel {
   background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);

@@ -37,22 +37,11 @@
   });
 
   const list = [
-    // ---------------- 国内服务 ----------------
+    // ---------------- 国内服务（大厂在前） ----------------
     {
-      id: 'ipip', name: 'IPIP.net', host: 'myip.ipip.net', group: 'cn', method: 'json',
-      url: 'https://myip.ipip.net/json',
-      parse: (d) => {
-        const l = (d.data && d.data.location) || [];
-        return { ip: d.data && d.data.ip, location: place(l[0], l[1], l[2]), isp: l[4] || l[3] };
-      },
-    },
-    {
-      id: 'upyun', name: '又拍云', host: 'pubstatic.b0.upaiyun.com', group: 'cn', method: 'json',
-      url: 'https://pubstatic.b0.upaiyun.com/?_upnode',
-      parse: (d) => {
-        const l = d.remote_addr_location || {};
-        return { ip: d.remote_addr, location: place(l.country, l.province, l.city), isp: l.isp };
-      },
+      id: 'qqvideo', name: '腾讯视频', host: 'vv.video.qq.com', group: 'cn', method: 'scriptvar',
+      url: 'https://vv.video.qq.com/checktime?otype=json', varName: 'QZOutputJson',
+      parse: (d) => ({ ip: d.ip }),
     },
     {
       id: 'dnspod', name: 'DNSPod', host: 'ipv4.ddnspod.com', group: 'cn', method: 'text',
@@ -71,17 +60,28 @@
       },
     },
     {
+      id: 'ipip', name: 'IPIP.net', host: 'myip.ipip.net', group: 'cn', method: 'json',
+      url: 'https://myip.ipip.net/json',
+      parse: (d) => {
+        const l = (d.data && d.data.location) || [];
+        return { ip: d.data && d.data.ip, location: place(l[0], l[1], l[2]), isp: l[4] || l[3] };
+      },
+    },
+    {
+      id: 'upyun', name: '又拍云', host: 'pubstatic.b0.upaiyun.com', group: 'cn', method: 'json',
+      url: 'https://pubstatic.b0.upaiyun.com/?_upnode',
+      parse: (d) => {
+        const l = d.remote_addr_location || {};
+        return { ip: d.remote_addr, location: place(l.country, l.province, l.city), isp: l.isp };
+      },
+    },
+    {
       id: 'pconline', name: '太平洋电脑网', host: 'whois.pconline.com.cn', group: 'cn', method: 'jsonp',
       url: 'https://whois.pconline.com.cn/ipJson.jsp?callback={cb}',
       parse: (d) => {
         const [loc, isp] = String(d.addr || '').trim().split(/\s+/);
         return { ip: d.ip, location: loc || '', isp: isp || '' };
       },
-    },
-    {
-      id: 'qqvideo', name: '腾讯视频', host: 'vv.video.qq.com', group: 'cn', method: 'scriptvar',
-      url: 'https://vv.video.qq.com/checktime?otype=json', varName: 'QZOutputJson',
-      parse: (d) => ({ ip: d.ip }),
     },
     {
       id: 'zxinc', name: 'ZXInc', host: 'ip.zxinc.org', group: 'cn', method: 'json',
