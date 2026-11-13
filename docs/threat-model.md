@@ -9,6 +9,7 @@ SafeIP 是纯前端工具：所有检测请求由访客的浏览器直接发往�
 检测源里有一部分依赖 JSONP（`<script>` 回调）与全局变量脚本（`scriptvar`），这些域必须进入 CSP 的 `script-src` 白名单：
 
 - `ipservice.ws.126.net`（网易）、`whois.pconline.com.cn`（太平洋电脑网）、`opendata.baidu.com`（百度）、`vv.video.qq.com`（腾讯视频）
+- 分流测试的国内探针另有两条：`*.dns-detect.alicdn.com`（阿里 DNS 探测接口，按随机子域区分探测点）、`r.inews.qq.com`（腾讯新闻 IP 接口）
 
 **风险**：若这些域自身的响应被攻击者控制（域名劫持、CDN 污染、接口被改造返回任意脚本），等同于在页面执行任意代码。
 
@@ -24,7 +25,7 @@ SafeIP 是纯前端工具：所有检测请求由访客的浏览器直接发往�
 
 ```
 default-src 'none'
-script-src  'self' + 4 个 JSONP 白名单域
+script-src  'self' + 6 个 JSONP 白名单域（含阿里 DNS 探测、腾讯新闻接口）
 style-src   'self'
 connect-src https: + http://ip-api.com
 img-src     'self' https://cdn.jsdelivr.net data: blob:

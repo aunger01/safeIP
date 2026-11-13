@@ -18,9 +18,9 @@ const fs = require('node:fs');
 const crypto = require('node:crypto');
 
 require(path.join(__dirname, '..', 'js', 'util.js'));
-require(path.join(__dirname, '..', 'js', 'sources.js'));
-const SafeIP = globalThis.SafeIP;
-const { util, sources } = SafeIP;
+// js/sources.js 与 js/splittest.js 都是无 DOM 依赖的 IIFE，可直接 require 取清单
+require(path.join(__dirname, '..', 'js', 'splittest.js'));
+const { util, sources, splittest } = globalThis.SafeIP;
 
 const TIMEOUT = 15000;
 const RETRY_DELAY = 3000;
@@ -30,10 +30,9 @@ const TITLE = '🩺 检测源健康巡检报告';
 
 // ---------------- 探测目标 ----------------
 
-// js/sources.js 可直接 require；splittest.js 是浏览器 IIFE（引用 window），正则抽取站点清单
-const traceHosts = [
-  ...new Set((fs.readFileSync(path.join(__dirname, '..', 'js', 'splittest.js'), 'utf8').match(/'([a-z0-9][a-z0-9.-]*\.[a-z]{2,})'/gi) || [])),
-].map((m) => m.slice(1, -1));
+// 只巡检 cf 类站点：国内站（阿里/腾讯/网易/字节）靠浏览器端 JSONP 与响应头借道，
+// 海外 runner 既拿不到正确结果也读不到 CORS 头，纳进来只会天天误报。
+const traceHosts = splittest.PROBES.filter((p) => p.echo === 'cf').map((p) => ({ id: p.id, name: p.name, host: p.host }));
 
 const ipTargets = sources.list.filter((s) => s.group !== 'v6'); // Actions 无 IPv6
 // trace 站点复用 fromTrace 的解析（只取 ip 字段验证）
@@ -41,7 +40,7 @@ const TRACE_PARSE = (text) => {
   const t = util.parseTrace(text);
   return { ip: t.ip };
 };
-const traceTargets = traceHosts.map((host) => ({ id: `trace:${host}`, name: host, host, trace: true, method: 'text', parse: TRACE_PARSE }));
+const traceTargets = traceHosts.map(({ id, name, host }) => ({ id: `trace:${id}`, name, host, trace: true, method: 'text', parse: TRACE_PARSE }));
 
 // ---------------- 取数与判定 ----------------
 

@@ -55,11 +55,11 @@
       if (this.running) return;
       this.running = true;
       if (fresh) this.traces.clear();
-      const hosts = splittest.CATEGORIES.flatMap((c) => c.hosts);
-      await util.pool(hosts, 6, async (host) => {
-        const r = await splittest.trace(host, { fresh });
+      const items = splittest.CATEGORIES.flatMap((c) => c.items);
+      await util.pool(items, 6, async (id) => {
+        const r = await splittest.trace(id, { fresh });
         if (r.ok) core.ensureGeo(r.ip);
-        this.traces.set(host, r);
+        this.traces.set(id, r);
         S.router.refresh();
       });
       this.running = false;
@@ -75,19 +75,19 @@
       const item = { host, result: null };
       this.custom = [item, ...this.custom.filter((x) => x.host !== host)].slice(0, 12);
       S.router.refresh();
-      item.result = await splittest.trace(host, { fresh: true });
+      item.result = await splittest.traceHost(host, { fresh: true });
       if (item.result.ok) core.ensureGeo(item.result.ip);
       S.router.refresh();
     },
 
-    /** 单独重测一个 trace 站点（卡片回骨架，防止连点：清缓存期间再点直接返回） */
-    async retestHost(host) {
-      if (!this.traces.has(host)) return;
-      this.traces.delete(host);
+    /** 单独重测一个站点（卡片回骨架，防止连点：清缓存期间再点直接返回） */
+    async retestHost(id) {
+      if (!this.traces.has(id)) return;
+      this.traces.delete(id);
       S.router.refresh();
-      const r = await splittest.trace(host, { fresh: true });
+      const r = await splittest.trace(id, { fresh: true });
       if (r.ok) core.ensureGeo(r.ip);
-      this.traces.set(host, r);
+      this.traces.set(id, r);
       S.router.refresh();
     },
 
@@ -106,13 +106,13 @@
       }).join('');
 
       q('sites').innerHTML = splittest.CATEGORIES.map((c) => {
-        const done = c.hosts.filter((h) => this.traces.has(h));
-        const okN = done.filter((h) => this.traces.get(h).ok).length;
-        return ui.subhead(c.title, done.length ? `${okN}/${c.hosts.length} 可读取` : '测试中')
-          + `<div class="grid compact">${c.hosts.map((h) => traceCard(v, h, this.traces.get(h))).join('')}</div>`;
+        const done = c.items.filter((id) => this.traces.has(id));
+        const okN = done.filter((id) => this.traces.get(id).ok).length;
+        return ui.subhead(c.title, done.length ? `${okN}/${c.items.length} 可读取` : '测试中', c.desc)
+          + `<div class="grid compact">${c.items.map((id) => traceCard(v, splittest.BY_ID.get(id), this.traces.get(id))).join('')}</div>`;
       }).join('');
 
-      q('custom').innerHTML = this.custom.map((x) => traceCard(v, x.host, x.result)).join('');
+      q('custom').innerHTML = this.custom.map((x) => traceCard(v, { name: x.host, host: x.host, hint: '自定义域名' }, x.result)).join('');
     },
   };
 
@@ -143,17 +143,19 @@
     </article>`;
   }
 
-  function traceCard(v, host, r) {
-    if (!r) return `<article class="item mini">${ui.itemHead(host, '测试中…')}<span class="skel w60"></span></article>`;
+  function traceCard(v, p, r) {
+    const sub = p.host || p.hint || '';
+    if (!r) return `<article class="item mini">${ui.itemHead(p.name, sub)}<span class="skel w60"></span></article>`;
     if (!r.ok) {
-      return `<article class="item mini is-err">${ui.itemHead(host, util.errorText(r.error), RETRY_BTN(`data-retry-host="${esc(host)}"`))}</article>`;
+      return `<article class="item mini is-err">${ui.itemHead(p.name, util.errorText(r.error), RETRY_BTN(`data-retry-host="${esc(p.id)}"`))}</article>`;
     }
     const e = v.exitByIP.get(r.ip);
     const g = core.geoOf(r.ip);
     const right = e ? ui.exitTag(e) : '<span class="chip" title="首页的检测源没有看到这个 IP">新出口</span>';
-    const restricted = analyze.aiRegionRestricted(r.loc) && /openai|chatgpt|claude|anthropic|grok|x\.ai|perplexity|poe|character/.test(host);
+    const restricted = p.ai && r.loc && analyze.aiRegionRestricted(r.loc);
+    const where = r.colo ? `${util.countryName(r.loc)} · ${r.colo} 节点` : (r.geo || p.hint || sub);
     return `<article class="item mini${e ? ` has-exit ${ui.exitClass(e)}` : ''}">
-      ${ui.itemHead(host, `${util.countryName(r.loc)} · ${r.colo} 节点`, right)}
+      ${ui.itemHead(p.name, where, right)}
       <div class="item-ip">${ui.ipText(r.ip)}</div>
       <div class="item-foot"><span>${ui.ccBadge(r.loc)} ${esc((g && g.isp) || '')}</span><span class="ms">${icon('clock')}${ui.fmtMs(r.ms)}</span></div>
       ${restricted ? `<div class="warn-chip">${ui.statusIcon('warning')}该地区可能不受支持</div>` : ''}

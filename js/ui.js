@@ -78,9 +78,9 @@
     img.replaceWith(code);
   }, true);
   const avatar = (name) => `<span class="avatar" aria-hidden="true">${esc(Array.from(String(name || '?'))[0].toUpperCase())}</span>`;
-  /** 品牌圆徽：命中内嵌 logo 用真图标，否则返回 null 由调用方回落首字母 */
-  const brandAvatar = (host) => {
-    const svg = SafeIP.logos && SafeIP.logos.get(host);
+  /** 品牌圆徽：先按 host 命中，其次按显示名（国内品牌无 host 可挂），都无则返回 null 由调用方回落首字母 */
+  const brandAvatar = (host, name) => {
+    const svg = SafeIP.logos && SafeIP.logos.get(host, name);
     return svg ? `<span class="avatar avatar-brand" aria-hidden="true">${svg}</span>` : null;
   };
   const iconAvatar = (name) => `<span class="avatar" aria-hidden="true">${icon(name)}</span>`;
@@ -95,7 +95,7 @@
   }
 
   function itemHead(name, host, right = '', avatarHTML = null) {
-    const av = avatarHTML || brandAvatar(host) || avatar(name);
+    const av = avatarHTML || brandAvatar(host, name) || avatar(name);
     return `<div class="item-head">${av}<div class="item-name"><b title="${esc(name)}">${esc(name)}</b><span class="host" title="${esc(host)}">${esc(host)}</span></div>${right}</div>`;
   }
 
