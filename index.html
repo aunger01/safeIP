@@ -10,18 +10,22 @@
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <title>SafeIP · 全球 IP 分流检测 · WebRTC / DNS 泄露 · AI 地区检测</title>
   <meta name="description" content="开了代理分流，国内外网站分别看到哪个 IP？SafeIP 用国内外几十个服务同时检测你的出口 IP，并检查 WebRTC / DNS 泄露、ChatGPT / Claude 判定的地区和 IP 风险评分。">
-  <!-- 自行部署到其他域名时，把下面的 canonical 与 og:url / og:image 换成你的地址 -->
-  <link rel="canonical" href="https://tsix2019.github.io/safeIP/">
+  <!-- 本 fork 部署于 10000101.xyz；上游源码见仓库 README。SEO 元信息已指向本站，搜索引擎才能正确归属 -->
+  <link rel="canonical" href="https://10000101.xyz/safeIP/">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="icon" href="assets/favicon-192.png" sizes="192x192" type="image/png">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <!-- PWA：添加到主屏幕用；无 Service Worker，不影响本地 file:// 双击打开 -->
+  <link rel="manifest" href="assets/manifest.webmanifest">
+  <meta name="theme-color" content="#f3f4f6" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0b0d10" media="(prefers-color-scheme: dark)">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="SafeIP">
   <meta property="og:locale" content="zh_CN">
-  <meta property="og:url" content="https://tsix2019.github.io/safeIP/">
+  <meta property="og:url" content="https://10000101.xyz/safeIP/">
   <meta property="og:title" content="SafeIP · 全球 IP 分流检测">
   <meta property="og:description" content="开了代理分流，国内外网站分别看到哪个 IP？用国内外几十个服务同时检测出口 IP，并检查 WebRTC / DNS 泄露、AI 服务地区和 IP 风险评分。纯前端开源，无后端。">
-  <meta property="og:image" content="https://tsix2019.github.io/safeIP/assets/og.png">
+  <meta property="og:image" content="https://10000101.xyz/safeIP/assets/og.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="SafeIP · 全球 IP 分流检测">
@@ -79,7 +83,7 @@
     "@type": "WebApplication",
     "name": "SafeIP",
     "alternateName": "SafeIP · 全球 IP 分流检测",
-    "url": "https://tsix2019.github.io/safeIP/",
+    "url": "https://10000101.xyz/safeIP/",
     "description": "用国内外几十个服务同时检测出口 IP，判断代理分流是否生效，检查 WebRTC / DNS 泄露、ChatGPT / Claude 判定的地区和 IP 风险评分，另有全球 Ping、浏览器指纹、Whois 与 ASN 查询。",
     "applicationCategory": "UtilitiesApplication",
     "operatingSystem": "Any",
@@ -89,7 +93,7 @@
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "CNY" },
     "license": "https://opensource.org/licenses/MIT",
     "author": { "@type": "Person", "name": "tsix2019", "url": "https://github.com/tsix2019" },
-    "sameAs": ["https://github.com/tsix2019/safeIP"]
+    "sameAs": ["https://github.com/tsix2019/safeIP", "https://github.com/aunger01/safeIP"]
   }
   </script>
 </head>
