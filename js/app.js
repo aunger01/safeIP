@@ -65,13 +65,76 @@
   });
 
   // ---------------- 重新检测与进度 ----------------
+  // 两段进度：IP 阶段（检测源+WebRTC+DNS）占 80%，连通性占 20%——
+  // 连通性要等 IP 检测完才开始，若按条目均分进度条会在后段长时间停滞，观感像卡死
   $('rerun').addEventListener('click', () => core.start());
   core.on((v) => {
     const st = core.state;
     const bar = $('progress-bar');
-    bar.style.width = st.total ? `${(st.done / st.total) * 100}%` : '0';
+    const ipPart = st.ipTotal ? Math.min(st.ipDone / st.ipTotal, 1) : 0;
+    const connPart = st.connTotal ? st.connDone / st.connTotal : 0;
+    bar.style.width = st.total ? `${(ipPart * 0.8 + connPart * 0.2) * 100}%` : '0';
     bar.parentElement.classList.toggle('done', v.finished);
     $('rerun').classList.toggle('is-busy', !v.finished);
+  });
+
+  // ---------------- 导出 JSON ----------------
+  $('export').addEventListener('click', () => {
+    const v = core.view();
+    const fmt = core.fmt;
+    const row = ({ meta, result: r }) => ({
+      name: meta.name, host: meta.host, group: meta.group,
+      ok: r ? r.ok : null, ip: r && r.ok ? fmt(r.ip) : null, cc: r && r.ok ? r.cc || null : null,
+      location: r && r.ok ? r.location || null : null, isp: r && r.ok ? r.isp || null : null,
+      ms: r && r.ok ? r.ms : null, error: r && !r.ok ? r.error : null,
+    });
+    const data = {
+      tool: 'SafeIP', version: 1, time: new Date().toISOString(), masked: core.state.mask,
+      route: {
+        status: v.route.status, ipv4ExitCount: v.route.count,
+        cnExit: v.route.cnExit ? fmt(v.route.cnExit) : null,
+        intlExit: v.route.intlExit ? fmt(v.route.intlExit) : null,
+        exceptions: v.route.exceptions.map((x) => ({ name: x.name, ip: fmt(x.ip) })),
+      },
+      exits: v.exits.map((e) => {
+        const g = core.geoOf(e.ip);
+        return {
+          label: e.label, ip: fmt(e.ip), family: e.family,
+          cc: (g && g.cc) || null, location: (g && g.location) || null, isp: (g && g.isp) || null,
+          asn: g && g.asn ? `AS${g.asn}` : null, type: core.typeOf(e.ip).label,
+          sources: e.sources.map((s) => s.name),
+        };
+      }),
+      sources: v.rows.filter((x) => x.result).map(row),
+      webrtc: {
+        verdict: v.rtcVerdict.status,
+        ips: (v.rtcVerdict.ips || []).map(fmt),
+        servers: v.rtc.map(({ server, result: r }) => ({
+          name: server.name, url: server.url, ok: r ? r.ok : null,
+          ips: r && r.ok ? r.publicIPs.map(fmt) : [], error: r && !r.ok ? r.error || null : null,
+        })),
+      },
+      dns: v.dns && {
+        verdict: v.dnsVerdict.status,
+        resolvers: v.dns.resolvers.map((r) => ({ ip: fmt(r.ip), cc: (core.geoOf(r.ip) || {}).cc || null })),
+        errors: v.dns.errors,
+      },
+      connectivity: v.conn.map(({ site, result: r }) => ({
+        name: site.name, host: site.host, group: site.group,
+        ok: r ? r.ok : null, ms: r && r.ok ? (r.reuse != null ? r.reuse : r.first) : null,
+      })),
+      ai: v.ai.status === 'none' ? null : v.ai,
+      china: v.fp ? { verdict: v.china.verdict, score: v.china.score, level: v.china.level } : null,
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    const d = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    a.href = URL.createObjectURL(blob);
+    a.download = `safeip-report-${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}.json`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    ui.toast(core.state.mask ? '已导出检测报告（IP 已打码）' : '已导出检测报告');
   });
 
   // 点击"更多"菜单以外的地方时收起菜单

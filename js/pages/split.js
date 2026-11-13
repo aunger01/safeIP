@@ -37,6 +37,16 @@
         this.testCustom(e.target.q.value);
         e.target.q.value = '';
       });
+      // 失败项单个重试：检测源走 core.rerunSource；trace 站点清缓存后单独重测
+      el.addEventListener('click', (e) => {
+        const src = e.target.closest('[data-retry]');
+        if (src) {
+          core.rerunSource(src.dataset.retry);
+          return;
+        }
+        const traceBtn = e.target.closest('[data-retry-host]');
+        if (traceBtn) this.retestHost(traceBtn.dataset.retryHost);
+      });
       this.runSites(false);
       this.update();
     },
@@ -70,6 +80,17 @@
       S.router.refresh();
     },
 
+    /** 单独重测一个 trace 站点（卡片回骨架，防止连点：清缓存期间再点直接返回） */
+    async retestHost(host) {
+      if (!this.traces.has(host)) return;
+      this.traces.delete(host);
+      S.router.refresh();
+      const r = await splittest.trace(host, { fresh: true });
+      if (r.ok) core.ensureGeo(r.ip);
+      this.traces.set(host, r);
+      S.router.refresh();
+    },
+
     update() {
       const v = core.view();
       const q = (k) => this.el.querySelector(`[data-r="${k}"]`);
@@ -95,10 +116,12 @@
     },
   };
 
+  const RETRY_BTN = (attrs) => `<button type="button" class="icon-btn" ${attrs} aria-label="重试" title="重试">${icon('refresh')}</button>`;
+
   function sourceCard(v, { meta, result: r }) {
     if (!r) return `<article class="item">${ui.itemHead(meta.name, meta.host)}${ui.SKELETON}</article>`;
     if (!r.ok) {
-      return `<article class="item is-err">${ui.itemHead(meta.name, meta.host)}<div class="item-ip">✕ ${esc(util.errorText(r.error))}</div></article>`;
+      return `<article class="item is-err">${ui.itemHead(meta.name, meta.host, RETRY_BTN(`data-retry="${meta.id}"`))}<div class="item-ip">✕ ${esc(util.errorText(r.error))}</div></article>`;
     }
     const e = v.exitByIP.get(r.ip);
     const g = core.geoOf(r.ip);
@@ -123,7 +146,7 @@
   function traceCard(v, host, r) {
     if (!r) return `<article class="item mini">${ui.itemHead(host, '测试中…')}<span class="skel w60"></span></article>`;
     if (!r.ok) {
-      return `<article class="item mini is-err">${ui.itemHead(host, util.errorText(r.error))}</article>`;
+      return `<article class="item mini is-err">${ui.itemHead(host, util.errorText(r.error), RETRY_BTN(`data-retry-host="${esc(host)}"`))}</article>`;
     }
     const e = v.exitByIP.get(r.ip);
     const g = core.geoOf(r.ip);

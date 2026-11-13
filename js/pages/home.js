@@ -183,7 +183,7 @@
       const st = core.state;
       q('meta').innerHTML = !st.total ? '' : v.finished
         ? `${ui.statusIcon('good')}完成 · 用时 ${((st.finished - st.started) / 1000).toFixed(1)} 秒`
-        : `${ui.statusIcon('muted')}检测中 ${st.done}/${st.total}`;
+        : `${ui.statusIcon('muted')}检测中 ${st.done}/${st.total}${st.ipDone >= st.ipTotal ? ' · 连通性检测中' : ''}`;
 
       q('health').innerHTML = tiles(v).map(([id, ic, name, s, status, detail]) => `
         <a class="health-tile st-${s}" href="${S.router.href(id)}">

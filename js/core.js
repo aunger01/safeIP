@@ -6,6 +6,8 @@
 
   const state = {
     run: 0, started: 0, finished: 0, done: 0, total: 0,
+    ipDone: 0, ipTotal: 0, // 第一阶段：检测源 + WebRTC + DNS（进度权重 0.8）
+    connDone: 0, connTotal: 0, // 第二阶段：连通性（进度权重 0.2）
     results: new Map(), // 检测源 id → 结果
     order: new Map(), // IP → 首次出现序号（出口字母与颜色）
     geo: new Map(), // IP → GeoInfo
@@ -105,11 +107,17 @@
     state.done = 0;
     state.finished = 0;
     state.connBusy = false;
+    state.ipDone = 0;
+    state.connDone = 0;
+    state.ipTotal = sources.list.length + webrtc.servers.length + 1;
+    state.connTotal = connectivity.sites.length;
     state.started = performance.now();
-    state.total = sources.list.length + webrtc.servers.length + 1 + connectivity.sites.length;
+    state.total = state.ipTotal + state.connTotal;
     const connToken = ++state.connRun;
 
-    const tick = () => {
+    const tick = (phase) => {
+      if (phase === 'conn') state.connDone++;
+      else state.ipDone++;
       if (++state.done === state.total) state.finished = performance.now();
       notify();
     };
@@ -140,7 +148,7 @@
     }));
 
     // IP 检测结束后再测连通性，避免几十个并发请求干扰延迟数据
-    Promise.all(ipJobs).then(() => runConn(() => alive() && connToken === state.connRun, tick));
+    Promise.all(ipJobs).then(() => runConn(() => alive() && connToken === state.connRun, () => tick('conn')));
 
     // 指纹要同步探测几十种字体（可达数百毫秒），等主线程空闲时再采集，不拖慢首批结果的显示
     if (!fpTask) {
@@ -170,6 +178,30 @@
   function setMask(on) {
     state.mask = !!on;
     notify();
+  }
+
+  // ---------------- 单源重试 ----------------
+
+  const rerunning = new Set();
+
+  /** 只重跑一个检测源（结果清空回骨架，完成后原位更新；出口字母沿用首次出现的序号） */
+  async function rerunSource(id) {
+    const source = sources.byId.get(id);
+    if (!source || rerunning.has(id)) return;
+    rerunning.add(id);
+    state.results.delete(id);
+    notify();
+    try {
+      const r = await sources.run(source);
+      if (r.ok) {
+        if (!state.order.has(r.ip)) state.order.set(r.ip, state.order.size);
+        ensureGeo(r.ip);
+      }
+      state.results.set(id, r);
+    } finally {
+      rerunning.delete(id);
+      notify();
+    }
   }
 
   // ---------------- 快照 ----------------
@@ -228,7 +260,7 @@
   const view = () => state.view || (state.view = snapshot());
 
   SafeIP.core = {
-    state, start, rerunConn, setMask, on, view, fmt, geoOf, riskOf, typeOf, identTypeOf,
+    state, start, rerunConn, rerunSource, setMask, on, view, fmt, geoOf, riskOf, typeOf, identTypeOf,
     ensureGeo, ensureRisk, isFinished,
   };
 })(window);
