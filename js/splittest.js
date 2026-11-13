@@ -9,19 +9,24 @@
     {
       id: 'ai', title: 'AI 服务',
       hosts: ['chatgpt.com', 'api.openai.com', 'claude.ai', 'api.anthropic.com', 'www.anthropic.com', 'grok.com', 'x.ai',
-        'www.perplexity.ai', 'poe.com', 'character.ai'],
+        'www.perplexity.ai', 'poe.com', 'character.ai', 'sora.com'],
     },
     {
       id: 'dev', title: '开发者',
-      hosts: ['www.npmjs.com', 'registry.npmjs.org', 'unpkg.com', 'cdnjs.cloudflare.com', 'gitlab.com', 'hub.docker.com', 'dash.cloudflare.com'],
+      hosts: ['www.npmjs.com', 'registry.npmjs.org', 'unpkg.com', 'cdnjs.cloudflare.com', 'gitlab.com', 'hub.docker.com', 'dash.cloudflare.com',
+        'testingcf.jsdelivr.net', 'cloudflaremirrors.com', 'kali.download', 'nodejs.org'],
     },
     {
       id: 'social', title: '社交与内容',
-      hosts: ['x.com', 'medium.com', 'stackoverflow.com', 'www.quora.com', 'www.pixiv.net', 'www.v2ex.com', 'linux.do'],
+      hosts: ['x.com', 'medium.com', 'stackoverflow.com', 'www.quora.com', 'www.pixiv.net', 'www.v2ex.com', 'linux.do',
+        'gateway.discord.gg',
+        'e-hentai.org', 'missav.ws', 'missav.ai', 'missav.live', 'hanime1.me', 'hanimeone.me', 'hanime1.com',
+        'javchu.com', 'av.jkforum.net', 'javdb.com'],
     },
     {
       id: 'other', title: '工具、购物与金融',
-      hosts: ['www.notion.so', 'www.canva.com', 'www.coinbase.com', 'www.crunchyroll.com', 'www.udemy.com', 'www.shopify.com', 'www.indeed.com'],
+      hosts: ['www.notion.so', 'www.canva.com', 'www.coinbase.com', 'www.crunchyroll.com', 'www.udemy.com', 'www.shopify.com', 'www.indeed.com',
+        'www.visa.com', 'www.okx.com', 'nav.l1n2.com'],
     },
   ];
 

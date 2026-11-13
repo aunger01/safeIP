@@ -74,6 +74,11 @@
     img.replaceWith(code);
   }, true);
   const avatar = (name) => `<span class="avatar" aria-hidden="true">${esc(Array.from(String(name || '?'))[0].toUpperCase())}</span>`;
+  /** 品牌圆徽：命中内嵌 logo 用真图标，否则返回 null 由调用方回落首字母 */
+  const brandAvatar = (host) => {
+    const svg = SafeIP.logos && SafeIP.logos.get(host);
+    return svg ? `<span class="avatar avatar-brand" aria-hidden="true">${svg}</span>` : null;
+  };
   const iconAvatar = (name) => `<span class="avatar" aria-hidden="true">${icon(name)}</span>`;
   const fmtMs = (ms) => (ms == null ? '—' : ms >= 1000 ? `${(ms / 1000).toFixed(1)} s` : `${Math.round(ms)} ms`);
 
@@ -85,8 +90,9 @@
     return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
   }
 
-  function itemHead(name, host, right = '', avatarHTML = avatar(name)) {
-    return `<div class="item-head">${avatarHTML}<div class="item-name"><b title="${esc(name)}">${esc(name)}</b><span class="host" title="${esc(host)}">${esc(host)}</span></div>${right}</div>`;
+  function itemHead(name, host, right = '', avatarHTML = null) {
+    const av = avatarHTML || brandAvatar(host) || avatar(name);
+    return `<div class="item-head">${av}<div class="item-name"><b title="${esc(name)}">${esc(name)}</b><span class="host" title="${esc(host)}">${esc(host)}</span></div>${right}</div>`;
   }
 
   const callout = (st, title, text, extra = '') => `<div class="callout st-${st}">${statusIcon(st)}<div><b>${esc(title)}</b>${text ? `<p>${esc(text)}</p>` : ''}${extra}</div></div>`;
@@ -146,7 +152,7 @@
   }
 
   SafeIP.ui = {
-    esc, icon, statusIcon, SKELETON, exitClass, exitTag, exitPill, ipText, copyBtn, ccBadge, avatar, iconAvatar,
+    esc, icon, statusIcon, SKELETON, exitClass, exitTag, exitPill, ipText, copyBtn, ccBadge, avatar, brandAvatar, iconAvatar,
     fmtMs, fmtTime, itemHead, callout, subhead, pageHead, kvTable, meter, applySizes, toast, copyText,
   };
 })(window);

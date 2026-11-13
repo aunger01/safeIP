@@ -330,6 +330,14 @@ small { font-size: 12px; }
   background: var(--card-2); border: 1px solid var(--border); color: var(--ink-2); font-weight: 700; font-size: 13px;
 }
 .avatar .i { width: 16px; height: 16px; }
+/* 品牌图标：内嵌 SVG 按比例缩进圆徽，深浅主题均保持原色 */
+.avatar-brand svg { width: 18px; height: 18px; display: block; }
+.item.mini .avatar-brand svg { width: 16px; height: 16px; }
+/* 少数品牌图标自带深色底或纯黑笔画，深色主题下用亮度提亮一档保证可辨 */
+html[data-theme='dark'] .avatar-brand svg { filter: brightness(1.12); }
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme='light']) .avatar-brand svg { filter: brightness(1.12); }
+}
 .item.mini .avatar { width: 28px; height: 28px; font-size: 12px; }
 .item-name { min-width: 0; flex: 1; line-height: 1.3; }
 .item-name b { display: block; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
