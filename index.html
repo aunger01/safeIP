@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
   <meta name="referrer" content="no-referrer">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://ipservice.ws.126.net https://whois.pconline.com.cn https://vv.video.qq.com https://opendata.baidu.com; style-src 'self'; connect-src https: http://ip-api.com; img-src 'self' https://cdn.jsdelivr.net data: blob:; base-uri 'none'; form-action 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://ipservice.ws.126.net https://whois.pconline.com.cn https://vv.video.qq.com https://opendata.baidu.com https://*.dns-detect.alicdn.com https://r.inews.qq.com; style-src 'self'; connect-src https: http://ip-api.com; img-src 'self' https://cdn.jsdelivr.net data: blob:; base-uri 'none'; form-action 'none'">
   <!-- 冷门国家码的旗图回退到 jsdelivr，预连省掉 DNS+TLS 串行等待 -->
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <title>SafeIP · 全球 IP 分流检测 · WebRTC / DNS 泄露 · AI 地区检测</title>
@@ -16,7 +16,7 @@
   <link rel="icon" href="assets/favicon-192.png" sizes="192x192" type="image/png">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <!-- PWA：添加到主屏幕用；无 Service Worker，不影响本地 file:// 双击打开 -->
-  <link rel="manifest" href="assets/manifest.webmanifest?v=202611130722">
+  <link rel="manifest" href="assets/manifest.webmanifest?v=202611130730">
   <meta name="theme-color" content="#f3f4f6" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#0b0d10" media="(prefers-color-scheme: dark)">
   <meta property="og:type" content="website">
@@ -38,46 +38,46 @@
     第一个脚本放在样式表之前：部分安全软件会在页面第一个 <script> 前插入同步脚本，
     插在样式表之后时它要等样式表下载完才执行，后面所有脚本的下载都会被推迟一次往返。
   -->
-  <script defer fetchpriority="high" src="js/util.js?v=202611130722"></script>
-  <link rel="stylesheet" href="css/style.css?v=202611130722">
+  <script defer fetchpriority="high" src="js/util.js?v=202611130730"></script>
+  <link rel="stylesheet" href="css/style.css?v=202611130730">
   <!-- 数据与逻辑模块 -->
-  <script defer fetchpriority="high" src="js/sources.js?v=202611130722"></script>
-  <script defer fetchpriority="high" src="js/geo.js?v=202611130722"></script>
-  <script defer fetchpriority="high" src="js/webrtc.js?v=202611130722"></script>
-  <script defer fetchpriority="high" src="js/dns.js?v=202611130722"></script>
-  <script defer fetchpriority="high" src="js/connectivity.js?v=202611130722"></script>
-  <script defer fetchpriority="high" src="js/analyze.js?v=202611130722"></script>
-  <script defer fetchpriority="high" src="js/risk.js?v=202611130722"></script>
-  <script defer fetchpriority="high" src="js/whois.js?v=202611130722"></script>
-  <script defer fetchpriority="high" src="js/gping.js?v=202611130722"></script>
-  <script defer fetchpriority="high" src="js/svcstatus.js?v=202611130722"></script>
-  <script defer fetchpriority="high" src="js/fingerprint.js?v=202611130722"></script>
-  <script defer fetchpriority="high" src="js/china.js?v=202611130722"></script>
-  <script defer fetchpriority="high" src="js/splittest.js?v=202611130722"></script>
-  <script defer fetchpriority="high" src="js/ipcard.js?v=202611130722"></script>
+  <script defer fetchpriority="high" src="js/sources.js?v=202611130730"></script>
+  <script defer fetchpriority="high" src="js/geo.js?v=202611130730"></script>
+  <script defer fetchpriority="high" src="js/webrtc.js?v=202611130730"></script>
+  <script defer fetchpriority="high" src="js/dns.js?v=202611130730"></script>
+  <script defer fetchpriority="high" src="js/connectivity.js?v=202611130730"></script>
+  <script defer fetchpriority="high" src="js/analyze.js?v=202611130730"></script>
+  <script defer fetchpriority="high" src="js/risk.js?v=202611130730"></script>
+  <script defer fetchpriority="high" src="js/whois.js?v=202611130730"></script>
+  <script defer fetchpriority="high" src="js/gping.js?v=202611130730"></script>
+  <script defer fetchpriority="high" src="js/svcstatus.js?v=202611130730"></script>
+  <script defer fetchpriority="high" src="js/fingerprint.js?v=202611130730"></script>
+  <script defer fetchpriority="high" src="js/china.js?v=202611130730"></script>
+  <script defer fetchpriority="high" src="js/splittest.js?v=202611130730"></script>
+  <script defer fetchpriority="high" src="js/ipcard.js?v=202611130730"></script>
   <!-- 调度、组件与页面 -->
-  <script defer fetchpriority="high" src="js/flags.js?v=202611130722"></script>
-  <script defer fetchpriority="high" src="js/logos.js?v=202611130722"></script>
-  <script defer fetchpriority="high" src="js/core.js?v=202611130722"></script>
-  <script defer fetchpriority="high" src="js/ui.js?v=202611130722"></script>
-  <script defer fetchpriority="high" src="js/pages/home.js?v=202611130722"></script>
-  <script defer fetchpriority="high" src="js/pages/lookup.js?v=202611130722"></script>
-  <script defer fetchpriority="high" src="js/pages/split.js?v=202611130722"></script>
-  <script defer fetchpriority="high" src="js/pages/ai.js?v=202611130722"></script>
-  <script defer fetchpriority="high" src="js/pages/risk.js?v=202611130722"></script>
-  <script defer fetchpriority="high" src="js/pages/conn.js?v=202611130722"></script>
-  <script defer fetchpriority="high" src="js/pages/dns.js?v=202611130722"></script>
-  <script defer fetchpriority="high" src="js/pages/webrtc.js?v=202611130722"></script>
-  <script defer fetchpriority="high" src="js/pages/cloudflare.js?v=202611130722"></script>
-  <script defer fetchpriority="high" src="js/pages/ping.js?v=202611130722"></script>
-  <script defer fetchpriority="high" src="js/pages/fingerprint.js?v=202611130722"></script>
-  <script defer fetchpriority="high" src="js/pages/china.js?v=202611130722"></script>
-  <script defer fetchpriority="high" src="js/pages/status.js?v=202611130722"></script>
-  <script defer fetchpriority="high" src="js/pages/whois.js?v=202611130722"></script>
-  <script defer fetchpriority="high" src="js/pages/asn.js?v=202611130722"></script>
-  <script defer fetchpriority="high" src="js/pages/card.js?v=202611130722"></script>
-  <script defer fetchpriority="high" src="js/router.js?v=202611130722"></script>
-  <script defer fetchpriority="high" src="js/app.js?v=202611130722"></script>
+  <script defer fetchpriority="high" src="js/flags.js?v=202611130730"></script>
+  <script defer fetchpriority="high" src="js/logos.js?v=202611130730"></script>
+  <script defer fetchpriority="high" src="js/core.js?v=202611130730"></script>
+  <script defer fetchpriority="high" src="js/ui.js?v=202611130730"></script>
+  <script defer fetchpriority="high" src="js/pages/home.js?v=202611130730"></script>
+  <script defer fetchpriority="high" src="js/pages/lookup.js?v=202611130730"></script>
+  <script defer fetchpriority="high" src="js/pages/split.js?v=202611130730"></script>
+  <script defer fetchpriority="high" src="js/pages/ai.js?v=202611130730"></script>
+  <script defer fetchpriority="high" src="js/pages/risk.js?v=202611130730"></script>
+  <script defer fetchpriority="high" src="js/pages/conn.js?v=202611130730"></script>
+  <script defer fetchpriority="high" src="js/pages/dns.js?v=202611130730"></script>
+  <script defer fetchpriority="high" src="js/pages/webrtc.js?v=202611130730"></script>
+  <script defer fetchpriority="high" src="js/pages/cloudflare.js?v=202611130730"></script>
+  <script defer fetchpriority="high" src="js/pages/ping.js?v=202611130730"></script>
+  <script defer fetchpriority="high" src="js/pages/fingerprint.js?v=202611130730"></script>
+  <script defer fetchpriority="high" src="js/pages/china.js?v=202611130730"></script>
+  <script defer fetchpriority="high" src="js/pages/status.js?v=202611130730"></script>
+  <script defer fetchpriority="high" src="js/pages/whois.js?v=202611130730"></script>
+  <script defer fetchpriority="high" src="js/pages/asn.js?v=202611130730"></script>
+  <script defer fetchpriority="high" src="js/pages/card.js?v=202611130730"></script>
+  <script defer fetchpriority="high" src="js/router.js?v=202611130730"></script>
+  <script defer fetchpriority="high" src="js/app.js?v=202611130730"></script>
   <!-- 结构化数据（只是数据，不会执行，不受 CSP 限制） -->
   <script type="application/ld+json">
   {
@@ -151,7 +151,7 @@
     <div class="wrap">
       <p>所有检测请求都由你的浏览器直接发往对应的第三方服务；本工具没有后端，不收集任何数据。</p>
       <p id="proto-note"></p>
-      <p><a href="https://github.com/tsix2019/safeIP" target="_blank" rel="noopener">GitHub</a> · MIT License</p>
+      <p><a href="https://github.com/tsix2019/safeIP" target="_blank" rel="noopener">GitHub</a> · MIT License · <span id="build-ver" title="静态资源版本戳；与页面脚本一致即为最新版">v202611130730</span></p>
     </div>
   </footer>
 

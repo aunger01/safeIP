@@ -21,6 +21,8 @@ const INDEX = path.join(ROOT, 'index.html');
 
 // 只处理本站本地资源（js/ 下全部脚本、样式表、manifest）
 const REF = /(src|href)="((?:js\/[\w./-]+\.js|css\/style\.css|assets\/manifest\.webmanifest))(?:\?v=[^"]*)?"/g;
+// 页脚可见版本号，便于一眼判断线上是不是最新版
+const BADGE = /(id="build-ver"[^>]*>)v([A-Za-z0-9._-]+)(<)/;
 
 function stamp(date = new Date()) {
   const p = (n) => String(n).padStart(2, '0');
@@ -45,6 +47,11 @@ function check(html) {
     [...html.matchAll(/"(?:js\/[\w./-]+\.js|css\/style\.css|assets\/manifest\.webmanifest)\?v=([^"]*)"/g)].map((m) => m[1])
   );
   if (versions.size > 1) issues.push(`版本号不统一: ${[...versions].join(', ')}`);
+  const badge = BADGE.exec(html);
+  if (!badge) issues.push('页脚缺少 #build-ver 版本号');
+  else if (versions.size === 1 && badge[2] !== [...versions][0]) {
+    issues.push(`页脚版本号与资源版本不一致: v${badge[2]} ≠ v${[...versions][0]}`);
+  }
   return { issues, versions: [...versions] };
 }
 
@@ -70,10 +77,11 @@ function main() {
   }
 
   let n = 0;
-  const next = html.replace(REF, (whole, attr, file) => {
+  let next = html.replace(REF, (whole, attr, file) => {
     n++;
     return `${attr}="${file}?v=${ver}"`;
   });
+  next = next.replace(BADGE, `$1v${ver}$2`);
 
   if (n === 0) {
     console.error('✗ 未匹配到任何本地资源引用，检查 index.html 结构');
