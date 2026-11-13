@@ -6,13 +6,17 @@ require('../js/logos.js');
 
 const { splittest, logos } = globalThis.SafeIP;
 
-test('品牌图标：内嵌 SVG，零外部引用（不越 CSP img-src）', () => {
+test('品牌图标：内嵌 SVG，零外部引用（不越 CSP img-src；data: 内嵌图除外）', () => {
   const all = [...Object.entries(logos.byHost), ...Object.entries(logos.byName)];
   assert.ok(all.length >= 60, `图标条目应不少于 60，实际 ${all.length}`);
   for (const [key, svg] of all) {
     assert.match(svg, /^<svg[\s>]/, `${key} 的图标不是内联 SVG`);
-    assert.doesNotMatch(svg, /<image|href=["']https?:|src=["']https?:/, `${key} 的图标引用了外部资源`);
+    assert.doesNotMatch(svg, /href=["']https?:|src=["']https?:/, `${key} 的图标引用了外部资源`);
+    for (const m of svg.matchAll(/<image[^>]*href="([^"]*)"/g)) {
+      assert.match(m[1], /^data:/, `${key} 的 image 引用了非 data: 资源`);
+    }
   }
+  assert.ok(logos.get('nav.l1n2.com'), '安杰导航站缺少品牌图标');
 });
 
 test('品牌图标：host 不分大小写、名称索引可命中，未知返回 null', () => {
