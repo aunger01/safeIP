@@ -96,6 +96,8 @@
     {
       id: 'cloudflare', name: 'Cloudflare', host: 'www.cloudflare.com', group: 'intl', method: 'text',
       url: 'https://www.cloudflare.com/cdn-cgi/trace',
+      // 主站偶发人机验证时兜底：官方诊断域，同账号体系，2026-11 实测同出口
+      alt: ['https://one.one.one.one/cdn-cgi/trace'],
       parse: fromTrace,
     },
     {
@@ -141,10 +143,11 @@
 
   // ---------------- 网站视角：Cloudflare trace ----------------
   // 站点偶发不回 trace（改道登录页 / 人机验证 / 限流），alt 里放备用端点竞速兜底
+  // alt 只配同品牌域且与主站同出口（2026-11 实测），不跨品牌兜底——不同站的分流路径可能不同
   [
-    ['chatgpt', 'ChatGPT', 'chatgpt.com', true],
-    ['openai', 'OpenAI', 'openai.com', true],
-    ['claude', 'Claude', 'claude.ai', true],
+    ['chatgpt', 'ChatGPT', 'chatgpt.com', true, ['https://ab.chatgpt.com/cdn-cgi/trace']],
+    ['openai', 'OpenAI', 'openai.com', true, ['https://api.openai.com/cdn-cgi/trace']],
+    ['claude', 'Claude', 'claude.ai', true, ['https://api.anthropic.com/cdn-cgi/trace']],
     ['grok', 'Grok', 'grok.com', true],
     ['x', 'X (Twitter)', 'x.com', false, ['https://api.x.com/cdn-cgi/trace', 'https://t.co/cdn-cgi/trace', 'https://mobile.x.com/cdn-cgi/trace']],
     ['notion', 'Notion', 'www.notion.so', false],

@@ -11,6 +11,20 @@ const { CN_IP, INTL_IP, V6_IP, RESOLVER, RESOLVER6, responses: R } = require('./
 
 const parse = (id, data) => sources.byId.get(id).parse(data);
 
+test('备用端点：配置齐全且为实测过的同品牌域（防跨路径兜底把出口测歪）', () => {
+  const EXPECT_ALT = {
+    cloudflare: ['https://one.one.one.one/cdn-cgi/trace'],
+    chatgpt: ['https://ab.chatgpt.com/cdn-cgi/trace'],
+    openai: ['https://api.openai.com/cdn-cgi/trace'],
+    claude: ['https://api.anthropic.com/cdn-cgi/trace'],
+    x: ['https://api.x.com/cdn-cgi/trace', 'https://t.co/cdn-cgi/trace', 'https://mobile.x.com/cdn-cgi/trace'],
+  };
+  for (const [id, alt] of Object.entries(EXPECT_ALT)) {
+    assert.deepEqual(sources.byId.get(id).alt, alt, id);
+    for (const u of alt) assert.match(u, /^https:\/\//, id);
+  }
+});
+
 test('检测源清单：id 唯一，字段齐全', () => {
   const ids = new Set();
   for (const s of sources.list) {
