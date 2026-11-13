@@ -29,6 +29,13 @@ test('品牌图标：国内品牌（阿里/腾讯/网易/字节/高通/CF 中国
   }
 });
 
+test('品牌图标：国内检测源站全有标（含子品牌别名复用母品牌）', () => {
+  for (const name of ['腾讯视频', 'DNSPod', 'DNSPod（国内）', 'IPIP.net', '又拍云', '太平洋电脑网', 'ZXInc']) {
+    assert.ok(logos.get('', name), `${name} 缺少品牌图标`);
+  }
+  assert.equal(logos.get('', '腾讯视频'), logos.get('', '腾讯'), '腾讯视频应复用腾讯标');
+});
+
 test('分流站点：国内站单列一组，四大国内品牌在内', () => {
   const domestic = splittest.CATEGORIES.find((c) => c.id === 'domestic');
   assert.ok(domestic, '缺少「国内站点」分类');

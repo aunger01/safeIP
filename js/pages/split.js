@@ -95,6 +95,7 @@
       const v = core.view();
       const q = (k) => this.el.querySelector(`[data-r="${k}"]`);
 
+      // 国内服务真正合成一块：13 张卡（检测源 + 品牌探针）统一卡片样式、同一个网格，不再分小节
       q('sources').innerHTML = (() => {
         const part = (gid) => {
           const g = sources.GROUPS[gid];
@@ -106,17 +107,33 @@
             : `<div class="grid">${rows.map((x) => sourceCard(v, x)).join('')}</div>`;
           return ui.subhead(g.title, `${okN}/${rows.length} 成功`, g.desc) + body;
         };
-        // 国内服务合并成一块：IP 检测源在前，品牌站点探针紧随其后，不再拆成两个分类
+        // 品牌探针结果适配成检测源卡片结构（geo/loc → location/extra），渲染走同一个 sourceCard
+        const asSource = (r) => {
+          if (!r) return null;
+          if (!r.ok) return r;
+          return {
+            ok: true, ip: r.ip, family: r.family, ms: r.ms,
+            location: r.geo || (r.loc ? util.countryName(r.loc) : ''),
+            cc: String(r.loc || '').toUpperCase(),
+            extra: { loc: r.loc, colo: r.colo, warp: r.warp },
+          };
+        };
         const dom = splittest.CATEGORIES.find((c) => c.id === 'domestic');
         const cnRows = v.rows.filter((x) => x.meta.group === 'cn');
-        const cnOk = cnRows.filter((x) => x.result && x.result.ok).length;
         const domDone = dom.items.filter((id) => this.traces.has(id));
-        const domOk = domDone.filter((id) => this.traces.get(id).ok).length;
-        const stat = `检测源 ${cnOk}/${cnRows.length} · 品牌 ${domDone.length ? `${domOk}/${dom.items.length}` : '测试中'}`;
-        return ui.subhead('国内服务', stat, '国内检测源看到的 IP，以及阿里 / 腾讯 / 网易 / 字节等品牌站点收到的出口（借道其自家接口，非 Cloudflare trace）')
-          + `<div class="grid">${cnRows.map((x) => sourceCard(v, x)).join('')}</div>`
-          + '<div class="sub-label">品牌站点出口</div>'
-          + `<div class="grid compact">${dom.items.map((id) => traceCard(v, splittest.BY_ID.get(id), this.traces.get(id))).join('')}</div>`
+        const okN = cnRows.filter((x) => x.result && x.result.ok).length
+          + domDone.filter((id) => this.traces.get(id).ok).length;
+        const total = cnRows.length + dom.items.length;
+        const cards = [
+          ...cnRows.map((x) => sourceCard(v, x)),
+          ...dom.items.map((id) => {
+            const p = splittest.BY_ID.get(id);
+            const r = asSource(this.traces.get(id));
+            return sourceCard(v, { meta: { id: p.id, name: p.name, host: p.host || p.hint }, result: r }, 'host');
+          }),
+        ];
+        return ui.subhead('国内服务', `${okN}/${total} 成功`, '国内检测源与阿里 / 腾讯 / 网易 / 字节等品牌站点各自看到的出口 IP（品牌站借道其自家接口，非 Cloudflare trace）')
+          + `<div class="grid">${cards.join('')}</div>`
           + part('intl') + part('site') + part('v6');
       })();
 
@@ -135,10 +152,11 @@
 
   const RETRY_BTN = (attrs) => `<button type="button" class="icon-btn" ${attrs} aria-label="重试" title="重试">${icon('refresh')}</button>`;
 
-  function sourceCard(v, { meta, result: r }) {
+  function sourceCard(v, { meta, result: r }, retryKind) {
+    const retry = RETRY_BTN(retryKind === 'host' ? `data-retry-host="${esc(meta.id)}"` : `data-retry="${esc(meta.id)}"`);
     if (!r) return `<article class="item">${ui.itemHead(meta.name, meta.host)}${ui.SKELETON}</article>`;
     if (!r.ok) {
-      return `<article class="item is-err">${ui.itemHead(meta.name, meta.host, RETRY_BTN(`data-retry="${meta.id}"`))}<div class="item-ip">✕ ${esc(util.errorText(r.error))}</div></article>`;
+      return `<article class="item is-err">${ui.itemHead(meta.name, meta.host, retry)}<div class="item-ip">✕ ${esc(util.errorText(r.error))}</div></article>`;
     }
     const e = v.exitByIP.get(r.ip);
     const g = core.geoOf(r.ip);
