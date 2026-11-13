@@ -188,6 +188,10 @@ small { font-size: 12px; }
 .subhead { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin: 22px 0 10px; }
 .subhead:first-child { margin-top: 0; }
 .subhead h3 { margin: 0; font-size: 15px; }
+/* 成人内容组：单独置底，虚线分隔 + 压低标题色，避免与常规站点混淆 */
+.cat-sep { margin: 30px 0 2px; border-top: 1px dashed var(--border-strong); }
+.cat-nsfw .subhead h3 { color: var(--ink-2); font-weight: 600; }
+.cat-nsfw .item { opacity: 0.92; }
 .subhead .desc { color: var(--muted); font-size: 12.5px; }
 .subhead .count {
   margin-left: auto; font-size: 12px; font-weight: 600; color: var(--ink-2); font-variant-numeric: tabular-nums;

@@ -117,7 +117,7 @@
     { id: 'crypto', title: '加密货币', desc: '交易所对出口地区敏感', items: ['coinbase', 'okx'] },
     { id: 'social', title: '社交与内容', desc: '社区、问答与图站', items: ['stackoverflow', 'quora', 'pixiv', 'v2ex', 'linuxdo'] },
     { id: 'tools', title: '工具与购物', desc: '生产力、学习与电商', items: ['notion', 'canva', 'udemy', 'shopify', 'indeed', 'nav'] },
-    { id: 'nsfw', title: '成人内容（NSFW）', desc: '仅做出口一致性对照，点到为止', items: ['ehentai', 'missav-ws', 'missav-ai', 'missav-live', 'hanime1', 'hanimeone', 'hanime1com', 'javchu', 'jkforum', 'javdb'] },
+    { id: 'nsfw', title: 'NSFW', desc: '仅做出口一致性对照，点到为止', items: ['ehentai', 'missav-ws', 'missav-ai', 'missav-live', 'hanime1', 'hanimeone', 'hanime1com', 'javchu', 'jkforum', 'javdb'] },
   ];
 
   /** Cloudflare trace：主域失败时可带 alt（同品牌备用域，别名不换尺子） */

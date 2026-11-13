@@ -108,8 +108,10 @@
       q('sites').innerHTML = splittest.CATEGORIES.map((c) => {
         const done = c.items.filter((id) => this.traces.has(id));
         const okN = done.filter((id) => this.traces.get(id).ok).length;
-        return ui.subhead(c.title, done.length ? `${okN}/${c.items.length} 可读取` : '测试中', c.desc)
+        const block = ui.subhead(c.title, done.length ? `${okN}/${c.items.length} 可读取` : '测试中', c.desc)
           + `<div class="grid compact">${c.items.map((id) => traceCard(v, splittest.BY_ID.get(id), this.traces.get(id))).join('')}</div>`;
+        // 成人内容单独置底：加虚线分隔并压低标题色，免得与常规站点混作一团
+        return c.id === 'nsfw' ? `<div class="cat-nsfw"><div class="cat-sep" aria-hidden="true"></div>${block}</div>` : block;
       }).join('');
 
       q('custom').innerHTML = this.custom.map((x) => traceCard(v, { name: x.host, host: x.host, hint: '自定义域名' }, x.result)).join('');
