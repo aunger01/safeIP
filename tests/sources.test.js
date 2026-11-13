@@ -49,7 +49,6 @@ test('国内源解析', () => {
   assert.deepEqual(parse('pconline', R.pconline), { ip: CN_IP, location: '上海市', isp: '电信' });
   assert.deepEqual(parse('pconline', R.pconlineForeign), { ip: INTL_IP, location: '美国', isp: '' });
   assert.deepEqual(parse('qqvideo', R.qqvideo), { ip: CN_IP });
-  assert.deepEqual(parse('zxinc', R.zxinc), { ip: INTL_IP, location: '美国 加利福尼亚州 洛杉矶', isp: 'Example Net' });
 });
 
 test('国外源与网站视角解析', () => {

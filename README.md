@@ -143,7 +143,7 @@ GitHub Pages、Cloudflare Pages、Vercel、Nginx 均可。HTTPS 页面会屏蔽�
 
 | 用途 | 服务 |
 |---|---|
-| 国内 IP | IPIP.net、又拍云、DNSPod、网易、太平洋电脑网、腾讯视频、ZXInc |
+| 国内 IP | IPIP.net、又拍云、DNSPod、网易、太平洋电脑网、腾讯视频 |
 | 国外 IP | Cloudflare、ipify、IP.SB、ipinfo、ipwho.is、ident.me、ipleak.net |
 | 网站视角 / 分流测试 | 各网站的 Cloudflare `/cdn-cgi/trace` |
 | 归属地 | ZXInc、百度、ip-api、IP.SB、ipwho.is、ipinfo |

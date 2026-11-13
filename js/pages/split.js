@@ -124,14 +124,17 @@
         const okN = cnRows.filter((x) => x.result && x.result.ok).length
           + domDone.filter((id) => this.traces.get(id).ok).length;
         const total = cnRows.length + dom.items.length;
+        // 显式排序：真大牌在前，小站垫底（s: = 检测源，p: = 品牌探针；未列出的兜底排最后）
+        const DOM_ORDER = ['p:tencent', 'p:alibaba', 'p:bytedance', 'p:netease', 's:qqvideo', 's:dnspod', 's:netease', 'p:cf-cn', 'p:qualcomm-cn', 's:ipip', 's:upyun', 's:pconline'];
+        const rank = new Map(DOM_ORDER.map((k, i) => [k, i]));
         const cards = [
-          ...cnRows.map((x) => sourceCard(v, x)),
+          ...cnRows.map((x) => ({ key: `s:${x.meta.id}`, card: sourceCard(v, x) })),
           ...dom.items.map((id) => {
             const p = splittest.BY_ID.get(id);
             const r = asSource(this.traces.get(id));
-            return sourceCard(v, { meta: { id: p.id, name: p.name, host: p.host || p.hint }, result: r }, 'host');
+            return { key: `p:${id}`, card: sourceCard(v, { meta: { id: p.id, name: p.name, host: p.host || p.hint }, result: r }, 'host') };
           }),
-        ];
+        ].sort((a, b) => (rank.get(a.key) ?? 99) - (rank.get(b.key) ?? 99)).map((x) => x.card);
         return ui.subhead('国内服务', `${okN}/${total} 成功`, '国内检测源与阿里 / 腾讯 / 网易 / 字节等品牌站点各自看到的出口 IP（品牌站借道其自家接口，非 Cloudflare trace）')
           + `<div class="grid">${cards.join('')}</div>`
           + part('intl') + part('site') + part('v6');

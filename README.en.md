@@ -145,7 +145,7 @@ Every endpoint below was tested to be callable directly from a browser (CORS or 
 
 | Purpose | Services |
 |---|---|
-| Chinese IP checks | IPIP.net, UpYun, DNSPod, NetEase, PConline, Tencent Video, ZXInc |
+| Chinese IP checks | IPIP.net, UpYun, DNSPod, NetEase, PConline, Tencent Video |
 | International IP checks | Cloudflare, ipify, IP.SB, ipinfo, ipwho.is, ident.me, ipleak.net |
 | Website traces / split test | Each site's Cloudflare `/cdn-cgi/trace` |
 | Geolocation | ZXInc, Baidu, ip-api, IP.SB, ipwho.is, ipinfo |

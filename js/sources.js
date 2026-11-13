@@ -83,14 +83,6 @@
         return { ip: d.ip, location: loc || '', isp: isp || '' };
       },
     },
-    {
-      id: 'zxinc', name: 'ZXInc', host: 'ip.zxinc.org', group: 'cn', method: 'json',
-      url: 'https://ip.zxinc.org/api.php?type=json',
-      parse: (d) => {
-        const x = d.data || {};
-        return { ip: x.myip, location: place(...String(x.country || '').split('–')), isp: util.clean(x.local) };
-      },
-    },
 
     // ---------------- 国外服务 ----------------
     {
