@@ -98,23 +98,17 @@ test('geo.merge 按优先级合并字段并记录来源', () => {
   const g = geo.merge(CN_IP, {
     zxinc: { location: '中国 上海', isp: '电信' },
     ipsb: { cc: 'CN', locationEn: 'China Shanghai', isp: 'Example Telecom', asn: 64501, asnName: 'EXAMPLE-TELECOM' },
-    ipapi: {
-      cc: 'CN', location: '中国 上海市 上海', isp: 'Example Telecom', asn: 64501, asnName: 'EXAMPLE',
-      flags: { hosting: false, proxy: false, mobile: false },
-    },
   });
   assert.equal(g.location, '中国 上海');
   assert.equal(g.isp, '电信');
   assert.equal(g.cc, 'CN');
   assert.equal(g.asn, 64501);
   assert.equal(g.asnName, 'EXAMPLE-TELECOM');
-  assert.deepEqual(g.flags, { hosting: false, proxy: false, mobile: false });
-  assert.deepEqual(g.from, { location: 'ZXInc', asn: 'IP.SB', flags: 'ip-api' });
+  assert.deepEqual(g.from, { location: 'ZXInc', asn: 'IP.SB' });
 
   const en = geo.merge(INTL_IP, { zxinc: null, ipsb: { cc: 'us', locationEn: 'United States Los Angeles' } });
   assert.equal(en.location, 'United States Los Angeles');
   assert.equal(en.cc, 'US');
-  assert.equal(en.flags, null);
 
   const empty = geo.merge(INTL_IP, {});
   assert.equal(empty.location, '');

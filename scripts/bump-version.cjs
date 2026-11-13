@@ -81,7 +81,7 @@ function main() {
     n++;
     return `${attr}="${file}?v=${ver}"`;
   });
-  next = next.replace(BADGE, `$1v${ver}$2`);
+  next = next.replace(BADGE, `$1v${ver}$3`);
 
   if (n === 0) {
     console.error('✗ 未匹配到任何本地资源引用，检查 index.html 结构');

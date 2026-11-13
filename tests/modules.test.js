@@ -65,20 +65,20 @@ test('risk.parseDnsbl：上榜 / 未上榜 / 拒绝查询', () => {
   assert.equal(risk.parseDnsbl({ status: 2, answers: [] }), null);
 });
 
-test('risk.score：干净 IP、机房 + 广播、代理 + Tor + 黑名单封顶', () => {
-  const clean = risk.score({ flags: { proxy: false, hosting: false, mobile: false }, kind: 'residential', asnType: 'Cable/DSL/ISP', rirCC: 'US', geoCC: 'US', dnsbl: [], sfs: { appears: false, frequency: 0 }, tor: { relay: false, exit: false } });
+test('risk.score：干净 IP、机房 + 广播、Tor + 黑名单封顶', () => {
+  const clean = risk.score({ kind: 'residential', asnType: 'Cable/DSL/ISP', rirCC: 'US', geoCC: 'US', dnsbl: [], sfs: { appears: false, frequency: 0 }, tor: { relay: false, exit: false } });
   assert.equal(clean.score, 0);
   assert.equal(clean.level, 'low');
   assert.equal(clean.native, true);
 
-  const dc = risk.score({ flags: null, kind: 'unknown', asnType: 'Content', rirCC: 'US', geoCC: 'JP', dnsbl: [] });
+  const dc = risk.score({ kind: 'unknown', asnType: 'Content', rirCC: 'US', geoCC: 'JP', dnsbl: [] });
   assert.equal(dc.score, 35);
   assert.equal(dc.level, 'medium');
   assert.deepEqual(dc.factors.map((f) => f.key), ['hosting', 'broadcast']);
   assert.equal(dc.native, false);
 
   const bad = risk.score({
-    flags: { proxy: true, hosting: true }, kind: 'hosting', rirCC: '', geoCC: 'US',
+    kind: 'hosting', rirCC: '', geoCC: 'US',
     dnsbl: [{ name: 'A', listed: true }, { name: 'B', listed: true }, { name: 'C', listed: true }, { name: 'D', listed: true }, { name: 'T', listed: true, tor: true }],
     sfs: { appears: true, frequency: 40 }, tor: { relay: true, exit: true },
   });

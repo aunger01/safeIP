@@ -83,13 +83,9 @@
   const HOSTING_RE = /\b(amazon|aws|google|microsoft|azure|alibaba|aliyun|tencent|oracle|digitalocean|linode|akamai|vultr|choopa|constant company|ovh|hetzner|contabo|leaseweb|m247|cloudflare|zenlayer|it7|bandwagon|dmit|hostinger|kamatera|hosthatch|greencloud|racknerd|colocrossing|psychz|quadranet|multacom|datacamp|cdn77|g-core|gcore|fastly|scaleway|ionos|hostwinds|buyvm|frantech|sharktech|data ?cent(er|re)|hosting|server|vps|idc|cloud)\b/i;
   const ISP_RE = /(telecom|unicom|chinanet|cmnet|china mobile|broadband|comcast|verizon|at&t|charter|spectrum|telstra|optus|vodafone|orange|ntt|kddi|softbank|chunghwa|hinet|pccw|hkbn|singtel|starhub|deutsche telekom|telefonica|电信|联通|移动|铁通|广电|宽带)/i;
 
-  /** IP 类型：ip-api 正向标记 > ident.me 类型 > ASN/ISP 关键词推测 > ip-api 负向标记 > 未知 */
+  /** IP 类型：ident.me 类型 > ASN/ISP 关键词推测 > 未知（原 ip-api 正向标记源已随 HTTP-only 接口移除） */
   function classifyIP(geo, identType) {
     const g = geo || {};
-    const f = g.flags;
-    if (f && f.proxy) return { kind: 'proxy', label: '代理 / VPN', basis: 'ip-api' };
-    if (f && f.hosting) return { kind: 'hosting', label: '机房 / IDC', basis: 'ip-api' };
-    if (f && f.mobile) return { kind: 'mobile', label: '移动网络', basis: 'ip-api' };
     const t = String(identType || '').toLowerCase();
     if (t) {
       const m = IDENT_TYPES[t];
@@ -98,7 +94,6 @@
     const text = [g.asnName, g.isp].filter(Boolean).join(' ');
     if (HOSTING_RE.test(text)) return { kind: 'hosting', label: '机房 / IDC', basis: '推测' };
     if (ISP_RE.test(text)) return { kind: 'residential', label: '运营商宽带', basis: '推测' };
-    if (f) return { kind: 'residential', label: '宽带 / 企业网络', basis: 'ip-api' };
     return { kind: 'unknown', label: '未知', basis: '' };
   }
 

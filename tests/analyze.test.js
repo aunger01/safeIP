@@ -112,16 +112,11 @@ test('dnsVerdict：泄露 / 安全 / 等待归属地', () => {
   assert.equal(analyze.dnsVerdict(null, route, geoOf).status, 'pending');
 });
 
-test('classifyIP：优先级', () => {
-  const flags = (o) => ({ hosting: false, proxy: false, mobile: false, ...o });
-  assert.equal(analyze.classifyIP({ flags: flags({ proxy: true, hosting: true }) }).kind, 'proxy');
-  assert.equal(analyze.classifyIP({ flags: flags({ hosting: true }) }).kind, 'hosting');
-  assert.equal(analyze.classifyIP({ flags: flags({ mobile: true }) }).kind, 'mobile');
+test('classifyIP：优先级（ident.me 类型 > 关键词推测 > 未知）', () => {
   assert.deepEqual(analyze.classifyIP({}, 'business'), { kind: 'business', label: '企业 / 商业宽带', basis: 'ident.me' });
   assert.equal(analyze.classifyIP({ asnName: 'DigitalOcean, LLC' }).basis, '推测');
   assert.equal(analyze.classifyIP({ asnName: 'DigitalOcean, LLC' }).kind, 'hosting');
   assert.equal(analyze.classifyIP({ isp: '电信' }).kind, 'residential');
-  assert.equal(analyze.classifyIP({ isp: 'Example Net', flags: flags({}) }).label, '宽带 / 企业网络');
   assert.equal(analyze.classifyIP(undefined).kind, 'unknown');
   assert.equal(analyze.typeText(analyze.classifyIP({ isp: '联通' })), '运营商宽带（推测）');
 });

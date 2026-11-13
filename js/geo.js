@@ -5,9 +5,6 @@
   const { util } = SafeIP;
   const { place } = util;
 
-  /** 页面为 https 时，http 接口会被浏览器当作混合内容拦截 */
-  const httpAllowed = () => !(root.location && root.location.protocol === 'https:');
-
   const parseAS = (s) => {
     const m = /^AS(\d+)\s*(.*)$/i.exec(String(s || '').trim());
     return m ? { asn: Number(m[1]), asnName: m[2] } : { asn: null, asnName: '' };
@@ -28,7 +25,8 @@
     return '';
   }
 
-  /** 各提供方：返回统一字段 { cc, location, locationEn, isp, asn, asnName, flags } 的子集 */
+  /** 各提供方：返回统一字段 { cc, location, locationEn, isp, asn, asnName } 的子集。
+   *  原 ip-api（仅 HTTP，HTTPS 页面被浏览器拦截）已于 2026-11 移除；DNS EDNS 用的 edns.ip-api.com 走 HTTPS，与此无关 */
   const providers = {
     async zxinc(ip) {
       const { data } = await util.request(`https://ip.zxinc.org/api.php?type=json&ip=${enc(ip)}`);
@@ -49,18 +47,6 @@
       if (!item || !item.location) throw util.makeError('parse');
       const [loc, isp] = String(item.location).trim().split(/\s+/);
       return { cc: ccFromCnText(loc), location: loc, isp };
-    },
-    async ipapi(ip) {
-      const fields = 'status,message,country,countryCode,regionName,city,isp,org,as,mobile,proxy,hosting,query';
-      const { data } = await util.request(`http://ip-api.com/json/${enc(ip)}?lang=zh-CN&fields=${fields}`);
-      if (data.status !== 'success') throw util.makeError('parse');
-      return {
-        cc: data.countryCode,
-        location: place(data.country, data.regionName, data.city),
-        isp: data.isp,
-        ...parseAS(data.as),
-        flags: { hosting: !!data.hosting, proxy: !!data.proxy, mobile: !!data.mobile },
-      };
     },
     async ipsb(ip) {
       const { data } = await util.request(`https://api.ip.sb/geoip/${enc(ip)}`);
@@ -93,17 +79,17 @@
   };
 
   const SOURCE_NAME = {
-    zxinc: 'ZXInc', baidu: '百度', ipapi: 'ip-api', ipsb: 'IP.SB', ipwhois: 'ipwho.is', ipinfo: 'ipinfo',
+    zxinc: 'ZXInc', baidu: '百度', ipsb: 'IP.SB', ipwhois: 'ipwho.is', ipinfo: 'ipinfo',
   };
 
   /** 每个字段按优先级取第一个非空值。cc 与 location 同源优先：
    *  中文源能判定中国（含港台澳）时以它为准，避免「地名中国 + 旗子别国」 */
   const PRIORITY = {
-    location: ['zxinc', 'baidu', 'ipapi'],
+    location: ['zxinc', 'baidu'],
     locationEn: ['ipsb', 'ipwhois', 'ipinfo'],
-    isp: ['zxinc', 'ipapi', 'baidu', 'ipsb', 'ipwhois'],
-    cc: ['zxinc', 'baidu', 'ipsb', 'ipapi', 'ipwhois', 'ipinfo'],
-    asn: ['ipsb', 'ipapi', 'ipwhois', 'ipinfo'],
+    isp: ['zxinc', 'baidu', 'ipsb', 'ipwhois'],
+    cc: ['zxinc', 'baidu', 'ipsb', 'ipwhois', 'ipinfo'],
+    asn: ['ipsb', 'ipwhois', 'ipinfo'],
   };
 
   function pick(got, field) {
@@ -120,7 +106,6 @@
     const isp = pick(got, 'isp');
     const cc = pick(got, 'cc');
     const asn = pick(got, 'asn');
-    const flags = got.ipapi && got.ipapi.flags;
     // 一致性守卫：地名能明确判定为中国（含港台澳）时，旗子必须跟着地名走
     const ccFromLoc = ccFromCnText(loc ? loc.value : '');
     let ccValue = cc ? String(cc.value).toUpperCase() : '';
@@ -132,11 +117,9 @@
       isp: isp ? isp.value : '',
       asn: asn ? asn.value : null,
       asnName: asn ? got[asn.from].asnName || '' : '',
-      flags: flags || null,
       from: {
         location: loc ? SOURCE_NAME[loc.from] : '',
         asn: asn ? SOURCE_NAME[asn.from] : '',
-        flags: flags ? SOURCE_NAME.ipapi : '',
       },
     };
   }
@@ -151,7 +134,6 @@
       }
     };
     const first = ['zxinc', 'ipsb'];
-    if (httpAllowed()) first.push('ipapi');
     await Promise.all(first.map(attempt));
     if (!pick(got, 'location')) await attempt('baidu');
     if (!pick(got, 'asn') || !pick(got, 'cc')) await attempt('ipwhois');
@@ -189,15 +171,14 @@
     return cache.get(ip);
   }
 
-  const COMPARE_ORDER = ['zxinc', 'baidu', 'ipapi', 'ipsb', 'ipwhois', 'ipinfo'];
+  const COMPARE_ORDER = ['zxinc', 'baidu', 'ipsb', 'ipwhois', 'ipinfo'];
   const compareCache = new Map();
 
-  /** 多数据库对比：返回每个提供方各自的结果（页面为 https 时跳过仅支持 HTTP 的 ip-api） */
+  /** 多数据库对比：返回每个提供方各自的结果 */
   function compare(ip) {
     if (!compareCache.has(ip)) {
       compareCache.set(ip, limited(() => Promise.all(COMPARE_ORDER.map(async (id) => {
         const base = { id, name: SOURCE_NAME[id] };
-        if (id === 'ipapi' && !httpAllowed()) return { ...base, ok: false, error: 'https' };
         try {
           const r = await providers[id](ip);
           return { ...base, ok: true, ...r, location: r.location || r.locationEn || '' };
@@ -209,5 +190,5 @@
     return compareCache.get(ip);
   }
 
-  SafeIP.geo = { lookup, compare, merge, httpAllowed };
+  SafeIP.geo = { lookup, compare, merge };
 })(typeof window !== 'undefined' ? window : globalThis);

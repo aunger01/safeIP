@@ -18,7 +18,6 @@
     }
     const { result: r, signals: s, geo: g } = a;
     const st = RISK_STATUS[r.level];
-    const f = s.flags;
     const torText = !s.tor ? '查询失败' : s.tor.exit ? '是（出口节点）' : s.tor.relay ? '是（中继节点）' : '否';
     const sfsText = !s.sfs ? '查询失败' : s.sfs.appears ? `${s.sfs.frequency} 次记录` : '无记录';
     const native = r.native === null ? '无数据' : r.native ? `是（注册与定位均在 ${s.rirCC}）` : `否（注册于 ${s.rirCC}，定位在 ${s.geoCC}）`;
@@ -26,7 +25,6 @@
       fact('原生 IP', esc(native), r.native === null ? 'unknown' : r.native ? 'good' : 'warning'),
       fact('网络类型', esc(s.pdb ? `${s.pdb.typeText || '未公开'}（${s.pdb.name}）` : '未收录于 PeeringDB'), s.pdb ? (['Content', 'Network Services'].includes(s.pdb.type) ? 'warning' : 'good') : 'unknown'),
       fact('IP 类型', esc(S.analyze.typeText(S.analyze.classifyIP(g, s.identType))), s.kind === 'hosting' ? 'warning' : 'good'),
-      fact('代理标记', esc(f ? (f.proxy ? '是' : '否') : '无数据（HTTPS 页面无法使用 ip-api）'), f ? (f.proxy ? 'critical' : 'good') : 'unknown'),
       fact('Tor 节点', esc(torText), !s.tor ? 'unknown' : s.tor.exit ? 'critical' : s.tor.relay ? 'warning' : 'good'),
       fact('StopForumSpam', esc(sfsText), !s.sfs ? 'unknown' : s.sfs.appears ? 'serious' : 'good'),
     ].join('');

@@ -27,7 +27,7 @@ SafeIP 是纯前端工具：所有检测请求由访客的浏览器直接发往�
 default-src 'none'
 script-src  'self' + 6 个 JSONP 白名单域（含阿里 DNS 探测、腾讯新闻接口）
 style-src   'self'
-connect-src https: + http://ip-api.com
+connect-src https:（原 http://ip-api.com 白名单已随该 HTTP-only 源移除，全站不再有明文 HTTP 请求）
 img-src     'self' https://cdn.jsdelivr.net data: blob:
 base-uri 'none'; form-action 'none'
 ```

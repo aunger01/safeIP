@@ -116,10 +116,9 @@
         : `<article class="panel"><p class="eyebrow">IP 评分</p>${ui.SKELETON}</article>`;
 
       const compare = s.compare
-        ? `<div class="table-wrap"><table class="table"><thead><tr><th>数据库</th><th>归属地</th><th>运营商</th><th>ASN</th><th>标记</th></tr></thead><tbody>${s.compare.map((x) => {
-          if (!x.ok) return `<tr class="muted"><td>${esc(x.name)}</td><td colspan="4">✕ ${esc(util.errorText(x.error))}</td></tr>`;
-          const flags = x.flags ? ['proxy', 'hosting', 'mobile'].filter((k) => x.flags[k]).map((k) => ({ proxy: '代理', hosting: '机房', mobile: '移动' }[k])) : [];
-          return `<tr><td>${esc(x.name)}</td><td>${ui.ccBadge(x.cc)} ${esc(x.location || '—')}</td><td>${esc(x.isp || '—')}</td><td>${x.asn ? `AS${esc(x.asn)}` : '—'}</td><td>${flags.length ? flags.map((f) => `<span class="chip">${f}</span>`).join(' ') : x.flags ? '无' : '—'}</td></tr>`;
+        ? `<div class="table-wrap"><table class="table"><thead><tr><th>数据库</th><th>归属地</th><th>运营商</th><th>ASN</th></tr></thead><tbody>${s.compare.map((x) => {
+          if (!x.ok) return `<tr class="muted"><td>${esc(x.name)}</td><td colspan="3">✕ ${esc(util.errorText(x.error))}</td></tr>`;
+          return `<tr><td>${esc(x.name)}</td><td>${ui.ccBadge(x.cc)} ${esc(x.location || '—')}</td><td>${esc(x.isp || '—')}</td><td>${x.asn ? `AS${esc(x.asn)}` : '—'}</td></tr>`;
         }).join('')}</tbody></table></div>`
         : `<div class="panel">${ui.SKELETON}</div>`;
 

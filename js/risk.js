@@ -90,18 +90,15 @@
   function score(s) {
     const factors = [];
     const add = (key, label, points, detail) => factors.push({ key, label, points, detail: detail || '' });
-    const f = s.flags || {};
     const lists = s.dnsbl || [];
 
-    if (f.proxy) add('proxy', '被标记为代理 / VPN', 40, 'ip-api');
     const torListed = lists.some((x) => x.tor && x.listed);
     if ((s.tor && s.tor.exit) || torListed) add('tor', 'Tor 出口节点', 50, s.tor && s.tor.exit ? 'Onionoo' : 'dan.me.uk');
     else if (s.tor && s.tor.relay) add('tor-relay', 'Tor 中继节点', 10, 'Onionoo');
 
     const pdbHosting = HOSTING_TYPES.includes(s.asnType);
-    if (f.hosting || pdbHosting || s.kind === 'hosting') {
-      const by = [f.hosting && 'ip-api', pdbHosting && `PeeringDB：${PDB_TYPE_TEXT[s.asnType] || s.asnType}`,
-        !f.hosting && !pdbHosting && 'ASN 名称推测'].filter(Boolean).join('、');
+    if (pdbHosting || s.kind === 'hosting') {
+      const by = [pdbHosting && `PeeringDB：${PDB_TYPE_TEXT[s.asnType] || s.asnType}`, !pdbHosting && 'ASN 名称推测'].filter(Boolean).join('、');
       add('hosting', '机房 / 数据中心 IP', 25, by);
     }
     if (s.rirCC && s.geoCC && s.rirCC !== s.geoCC) {
@@ -135,7 +132,7 @@
       v4 ? Promise.all(DNSBLS.map(async (l) => ({ ...l, listed: await dnsbl(ip, l) }))) : Promise.resolve(null),
     ]);
     const signals = {
-      flags: g.flags, identType, kind: SafeIP.analyze.classifyIP(g, identType).kind,
+      identType, kind: SafeIP.analyze.classifyIP(g, identType).kind,
       asnType: pdb && pdb.type, pdb, geoCC: g.cc, rirCC: rir || '', dnsbl: lists, sfs, tor: torInfo,
     };
     return { ip, geo: g, signals, result: score(signals) };
