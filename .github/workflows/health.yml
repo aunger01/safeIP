@@ -1,0 +1,26 @@
+name: 检测源健康巡检
+on:
+  schedule:
+    - cron: "30 1 * * *" # UTC 01:30 = 北京时间 09:30
+  workflow_dispatch:
+
+# 用 workflow 自带的临时 GITHUB_TOKEN 开/关巡检 Issue，无需存任何 PAT
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: health-check
+  cancel-in-progress: false
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/health-check.cjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
