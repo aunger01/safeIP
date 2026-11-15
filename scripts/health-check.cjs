@@ -247,7 +247,13 @@ async function main() {
     console.log('--- DRY_RUN 报告 ---\n' + report.body);
     return;
   }
-  await syncIssue(report);
+  // Issue 通道不可用（仓库关闭 Issues / 无权限）时不应让巡检整体红脸：降级为日志输出报告
+  try {
+    await syncIssue(report);
+  } catch (e) {
+    console.warn(`⚠️ 巡检 Issue 同步失败（${e.message}）；报告改为输出到日志。`);
+    console.log('--- 巡检报告 ---\n' + report.body);
+  }
 }
 
 main().catch((e) => {
