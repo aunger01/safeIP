@@ -18,6 +18,7 @@ const fs = require('node:fs');
 const crypto = require('node:crypto');
 
 require(path.join(__dirname, '..', 'js', 'util.js'));
+require(path.join(__dirname, '..', 'js', 'sources.js'));
 // js/sources.js 与 js/splittest.js 都是无 DOM 依赖的 IIFE，可直接 require 取清单
 require(path.join(__dirname, '..', 'js', 'splittest.js'));
 const { util, sources, splittest } = globalThis.SafeIP;
